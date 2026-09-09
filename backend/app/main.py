@@ -45,11 +45,26 @@ app.include_router(workspaces.router)
 
 @app.on_event("startup")
 def on_startup() -> None:
-    # Fine for a club deployment. Swap for Alembic migrations before the schema
-    # carries data anyone would miss.
+    """Bring the schema up, and seed only a database that has never been used.
+
+    This must never destroy data. A restart of a live server has to leave every
+    account, team and project exactly where it was, so the seed path here is
+    ``seed_if_empty`` — which no-ops the moment a single user exists — and never
+    ``run()``, which drops.
+
+    ``create_all`` adds missing tables but does not alter existing ones, so a new
+    *column* still needs a real migration. That remains the next thing this
+    project needs.
+    """
+
     Base.metadata.create_all(bind=engine)
-    from app.seed import run
-    run()
+
+    from app.seed import seed_if_empty
+
+    if seed_if_empty():
+        logging.info("Empty database detected on startup — seeded demo data.")
+    else:
+        logging.info("Existing data found on startup — left untouched.")
 
 @app.get("/health", tags=["meta"])
 def health() -> dict:

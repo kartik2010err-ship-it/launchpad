@@ -5,13 +5,31 @@ workspaces, people who hold different roles in different workspaces, and a
 student who exists only in a rival school so the authorization tests have
 something real to fail against.
 
-Run with ``python -m app.seed``. Safe to re-run: it drops and recreates.
+**Seeding never happens by accident.** There are two entry points and the
+difference between them matters:
+
+``seed_if_empty()``
+    What the application calls on startup. Seeds only when no account has ever
+    been created, and *never drops anything*. A restart of a live server is a
+    no-op, so real accounts, teams and projects survive it.
+
+``run(reset=True)``
+    Destructive: drops every table and rebuilds the demo set. Only ever called
+    deliberately — by the test suite, which wants a known fixture, or from the
+    command line with an explicit ``--reset``.
+
+The command line defaults to the safe path::
+
+    python -m app.seed            # seed only if the database is empty
+    python -m app.seed --reset    # wipe and rebuild the demo data
 """
 
 from __future__ import annotations
 
 import random
 from datetime import date, timedelta
+
+from sqlalchemy import func, select
 
 from app.core.security import hash_password
 from app.db.session import Base, SessionLocal, engine
@@ -153,9 +171,52 @@ def _answers_for(student) -> dict[str, str]:
     return {k: full[k] for k in keys[: max(1, round(len(keys) * ratio))]}
 
 
-def run() -> None:
+def database_is_empty() -> bool:
+    """True when no account has ever been created here.
+
+    A user row is the signal: every other kind of record in this schema hangs
+    off one, so "no users" is the only state where wiping nothing and seeding
+    demo data is unambiguously safe.
+    """
+
+    # The table has to exist before it can be counted — on a genuinely fresh
+    # database this is what creates it.
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        return (db.scalar(select(func.count()).select_from(User)) or 0) == 0
+    finally:
+        db.close()
+
+
+def seed_if_empty() -> bool:
+    """Seed a first-run database. Returns whether anything was written.
+
+    This is the only seeding path the running application ever takes. It does
+    not drop, so restarting a server that already has real data does nothing at
+    all — which is the entire point of it existing separately from ``run``.
+    """
+
+    if not database_is_empty():
+        return False
+    run(reset=False)
+    return True
+
+
+def run(reset: bool = True) -> None:
+    """Build the demo dataset.
+
+    ``reset=True`` destroys everything first. That is correct for tests and for
+    an explicit command-line reset, and catastrophic on a live database, which
+    is why the application never calls this.
+    """
+
     random.seed(11)
-    Base.metadata.drop_all(bind=engine)
+    if reset:
+        Base.metadata.drop_all(bind=engine)
+    # Idempotent: creates missing tables, leaves existing ones untouched. Note
+    # it does not alter existing tables, so a *column* added later still needs a
+    # real migration — this project has no migration tool yet.
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     today = date.today()
@@ -617,4 +678,22 @@ def run() -> None:
 
 
 if __name__ == "__main__":
-    run()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Seed the Research Coach demo data.")
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Drop every table first and rebuild from scratch. Destroys real accounts.",
+    )
+    args = parser.parse_args()
+
+    if args.reset:
+        run(reset=True)
+    elif seed_if_empty():
+        pass  # run() already printed the summary
+    else:
+        print(
+            "Database already contains accounts — nothing was changed.\n"
+            "Pass --reset to wipe it and rebuild the demo data."
+        )

@@ -84,7 +84,9 @@ class ProjectSummary(ORMModel):
     visibility: str = "private"
     status: str = "on_track"
     title: str
-    owner_id: int
+    owner_id: int | None = None
+    owner_team_id: int | None = None
+    owner_kind: str = "individual"
     grade_level: int
     project_type: ProjectType
     category: Category

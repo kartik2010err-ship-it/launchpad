@@ -52,6 +52,10 @@ def competition_detail(key: str) -> dict:
             }
             for i in comp.items
         ],
+        # Team configuration lives alongside the requirements so the UI can show
+        # "what this app enforces" next to "what the rulebook says" — which is
+        # unloaded, and labelled as such.
+        "team_rules": competitions.team_rules_payload(comp.key),
     }
 
 

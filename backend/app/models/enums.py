@@ -51,6 +51,31 @@ OVERSIGHT_ROLES: frozenset[WorkspaceRole] = frozenset(
 )
 
 
+class TeamRole(StrEnum):
+    """Authority inside one team.
+
+    Deliberately thin. A team is small — three students and a mentor — so the
+    only distinction worth making is "someone has to be able to rename it".
+    Everything oversight-shaped is still decided by ``WorkspaceRole``.
+    """
+
+    TEAM_LEAD = "team_lead"
+    MEMBER = "member"
+
+
+TEAM_ROLE_LABELS: dict[TeamRole, str] = {
+    TeamRole.TEAM_LEAD: "Team lead",
+    TeamRole.MEMBER: "Member",
+}
+
+
+class ProjectOwnerKind(StrEnum):
+    """Which of a project's two mutually exclusive ownership modes is in use."""
+
+    INDIVIDUAL = "individual"
+    TEAM = "team"
+
+
 class WorkspaceType(StrEnum):
     SCHOOL = "school"
     RESEARCH_CLUB = "research_club"
@@ -218,3 +243,59 @@ PHASE_LABELS: dict[Phase, str] = {
     Phase.INTERVIEW: "Interview preparation",
     Phase.COMPETITION: "Competition",
 }
+
+
+class OutreachStatus(StrEnum):
+    DRAFT = "draft"
+    SENT = "sent"
+    REPLIED = "replied"
+    MEETING_SCHEDULED = "meeting_scheduled"
+    NO_RESPONSE = "no_response"
+    DECLINED = "declined"
+
+
+OUTREACH_STATUS_LABELS: dict[OutreachStatus, str] = {
+    OutreachStatus.DRAFT: "Draft",
+    OutreachStatus.SENT: "Sent",
+    OutreachStatus.REPLIED: "Replied",
+    OutreachStatus.MEETING_SCHEDULED: "Meeting scheduled",
+    OutreachStatus.NO_RESPONSE: "No response",
+    OutreachStatus.DECLINED: "Declined",
+}
+
+
+class GuideCategory(StrEnum):
+    FUNDAMENTALS = "research_fundamentals"
+    EXPERIMENTAL_DESIGN = "experimental_design"
+    STATISTICS = "statistics"
+    LITERATURE = "research_and_literature"
+    DATA = "data"
+    SCIENCE_FAIR = "science_fair"
+
+
+GUIDE_CATEGORY_LABELS: dict[GuideCategory, str] = {
+    GuideCategory.FUNDAMENTALS: "Research fundamentals",
+    GuideCategory.EXPERIMENTAL_DESIGN: "Experimental design",
+    GuideCategory.STATISTICS: "Statistics",
+    GuideCategory.LITERATURE: "Research & literature",
+    GuideCategory.DATA: "Data",
+    GuideCategory.SCIENCE_FAIR: "Science fair",
+}
+
+
+class SourceConfidence(StrEnum):
+    """Where a piece of information about a past project actually came from.
+
+    The winning-projects library exists to show students real work. That is only
+    useful if every field can be traced. Nothing is ever displayed as fact on the
+    strength of the model's memory — see ``app.services.winners_service``.
+    """
+
+    # Came from a dataset we ingested, with a citable source.
+    VERIFIED_SOURCE = "verified_source"
+    # Present in the record but the source did not attest to it.
+    UNVERIFIED = "unverified"
+    # Written by this application's AI as commentary on verified fields.
+    AI_ANALYSIS = "ai_analysis"
+    # The source simply does not contain this.
+    NOT_AVAILABLE = "not_available"

@@ -18,6 +18,7 @@ from app.models.enums import (
     WorkspaceType,
 )
 from app.models.project import Project, User
+from app.models.team import Team, TeamMembership
 from app.models.workspace_org import (
     Workspace,
     WorkspaceInvitation,
@@ -88,37 +89,80 @@ def is_oversight(membership: WorkspaceMembership | None) -> bool:
     return membership is not None and membership.role in OVERSIGHT_ROLES
 
 
-def can_view_project(project: Project, membership: WorkspaceMembership | None) -> bool:
+def owns_project(db: Session, project: Project, user_id: int) -> bool:
+    """Is this person the project's researcher of record?
+
+    Two ownership modes, one question. For an individual project that is the
+    owner column; for a team project it is membership of the owning team — which
+    is what makes three students share one project rather than three copies.
+    """
+
+    if project.owner_team_id is not None:
+        return (
+            db.scalars(
+                select(TeamMembership).where(
+                    TeamMembership.team_id == project.owner_team_id,
+                    TeamMembership.user_id == user_id,
+                )
+            ).first()
+            is not None
+        )
+    return project.owner_id is not None and project.owner_id == user_id
+
+
+def project_team_mentor_id(db: Session, project: Project) -> int | None:
+    if project.owner_team_id is None:
+        return None
+    team = db.get(Team, project.owner_team_id)
+    return team.mentor_id if team else None
+
+
+def can_view_project(
+    db: Session, project: Project, membership: WorkspaceMembership | None
+) -> bool:
     if membership is None or membership.workspace_id != project.workspace_id:
         return False
-    if project.owner_id == membership.user_id:
+    if owns_project(db, project, membership.user_id):
         return True
     if is_oversight(membership):
         return True
     if project.mentor_id == membership.user_id:
         return True
+    if project_team_mentor_id(db, project) == membership.user_id:
+        return True
     # Anything else depends on how open the project is.
     return project.visibility == ProjectVisibility.WORKSPACE
 
 
-def can_edit_project(project: Project, membership: WorkspaceMembership | None) -> bool:
-    """Editing the research itself stays with the student who is doing it.
+def can_edit_project(
+    db: Session, project: Project, membership: WorkspaceMembership | None
+) -> bool:
+    """Editing the research itself stays with the students who are doing it.
 
     Owners and leads can oversee, comment and re-assign, but they do not get to
-    rewrite a student's research question out from under them.
+    rewrite a student's research question out from under them. On a team project
+    that right belongs to every member of the owning team and to nobody else —
+    a student on another team is exactly as locked out as a stranger.
     """
-    return membership is not None and project.owner_id == membership.user_id
+    if membership is None or membership.workspace_id != project.workspace_id:
+        return False
+    return owns_project(db, project, membership.user_id)
 
 
-def can_comment_on_project(project: Project, membership: WorkspaceMembership | None) -> bool:
+def can_comment_on_project(
+    db: Session, project: Project, membership: WorkspaceMembership | None
+) -> bool:
     if membership is None or membership.workspace_id != project.workspace_id:
         return False
     if is_oversight(membership):
         return True
-    if membership.role == WorkspaceRole.MENTOR and project.mentor_id == membership.user_id:
+    if membership.role == WorkspaceRole.MENTOR and (
+        project.mentor_id == membership.user_id
+        or project_team_mentor_id(db, project) == membership.user_id
+    ):
         return True
     # Students reply in their own thread.
-    return project.owner_id == membership.user_id
+    return owns_project(db, project, membership.user_id)
 
 
 def can_assign_mentor(workspace: Workspace, membership: WorkspaceMembership | None) -> bool:
@@ -319,6 +363,18 @@ def remove_member(db: Session, workspace_id: int, target_user_id: int) -> None:
         )
     ):
         project.mentor_id = None
+    for team in db.scalars(
+        select(Team).where(Team.workspace_id == workspace_id, Team.mentor_id == target_user_id)
+    ):
+        team.mentor_id = None
+    # Leaving the workspace means leaving its teams: team membership is what
+    # grants edit rights on a shared project, and this person no longer belongs.
+    for team_membership in db.scalars(
+        select(TeamMembership)
+        .join(Team, Team.id == TeamMembership.team_id)
+        .where(Team.workspace_id == workspace_id, TeamMembership.user_id == target_user_id)
+    ):
+        db.delete(team_membership)
     db.delete(membership)
     db.flush()
 

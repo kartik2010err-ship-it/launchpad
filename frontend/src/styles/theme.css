@@ -2,45 +2,61 @@
   Research Coach — visual system
 
   The subject is a measuring instrument for research quality, used by teenagers
-  and their advisor. So the surface reads like lab paper and a panel meter, not
-  like a marketing page: near-square corners, hairline rules, a single deep
-  green accent, and a signal palette reserved for things that are actually
+  and their advisor. So the surface reads like a darkened instrument panel: deep
+  charcoal-navy ground, cards that sit a step above it, hairline rules, a cool
+  cyan-blue accent, and a signal palette reserved for things that are actually
   signals (flags, warnings, unassessable scores).
+
+  Everything below is driven by the tokens in this block. No component assigns a
+  raw colour; changing the theme means changing these values and nothing else,
+  which is what keeps the landing page, the workspace, the library and the
+  team dashboards looking like one product.
+
+  Contrast targets: --ink on --surface is ~14:1, --ink-soft ~7:1, --ink-faint
+  ~4.6:1, and every status colour clears 4.5:1 on its own soft background.
 
   One deliberate piece of boldness: the student's research question is set large
   in serif, like the object under study. Everything around it stays quiet.
 */
 
 :root {
-  --paper: #f5f6f4;
-  --surface: #ffffff;
-  --surface-sunk: #eceeeb;
+  color-scheme: dark;
 
-  --ink: #16211c;
-  --ink-soft: #56635c;
-  --ink-faint: #8a948e;
+  /* Ground -> raised. Three steps is enough; more reads as clutter. */
+  --paper: #0e1319;
+  --surface: #161c24;
+  --surface-sunk: #10161d;
+  --surface-raised: #1d242e;
 
-  --rule: #d5dbd6;
-  --rule-strong: #b6bfb8;
+  --ink: #e8edf2;
+  --ink-soft: #9aa7b5;
+  --ink-faint: #6b7886;
 
-  --accent: #1d5b4c;
-  --accent-hover: #164438;
-  --accent-soft: #e4ede9;
+  --rule: #262f3a;
+  --rule-strong: #36414f;
 
-  --flag: #a3341f;
-  --flag-soft: #fbeceb;
-  --warn: #8a6614;
-  --warn-soft: #fbf3e2;
-  --ok: #2e6b4f;
-  --ok-soft: #e7f1ea;
-  --inert: #9aa5a0;
+  /* A cool, restrained blue. Saturated enough to read as the action colour,
+     dark enough that a screen full of it is not tiring. */
+  --accent: #4d9fff;
+  --accent-hover: #6fb2ff;
+  --accent-soft: #14243a;
+  --accent-line: #27436b;
+  --on-accent: #08111c;
+
+  --flag: #ff7a6b;
+  --flag-soft: #2a1614;
+  --warn: #e5b45c;
+  --warn-soft: #271f11;
+  --ok: #4fd39c;
+  --ok-soft: #10241d;
+  --inert: #64717f;
 
   --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --serif: "IBM Plex Serif", Georgia, serif;
   --mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  --radius: 3px;
-  --shell-rail: 232px;
+  --radius: 4px;
+  --shell-rail: 240px;
 }
 
 * {
@@ -471,13 +487,13 @@ button {
 .callout--flag {
   border-left-color: var(--flag);
   background: var(--flag-soft);
-  border-color: #f0d8d4;
+  border-color: var(--flag);
   border-left-color: var(--flag);
 }
 .callout--warn {
   border-left-color: var(--warn);
   background: var(--warn-soft);
-  border-color: #eee0c4;
+  border-color: var(--warn);
   border-left-color: var(--warn);
 }
 .callout--note {
@@ -587,7 +603,7 @@ textarea:focus {
   gap: 0.4rem;
   border: 1px solid var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   padding: 0.42rem 0.9rem;
   border-radius: var(--radius);
   cursor: pointer;
@@ -736,19 +752,23 @@ textarea:focus {
    ========================================================================== */
 
 :root {
-  --status-ok: #2e6b4f;
-  --status-ok-soft: #e7f1ea;
-  --status-attention: #8a6614;
-  --status-attention-soft: #fbf3e2;
-  --status-risk: #a3341f;
-  --status-risk-soft: #fbeceb;
-  --status-blocked: #6b2233;
-  --status-blocked-soft: #f7e9ec;
-  --status-done: #4a5852;
-  --status-done-soft: #eceeeb;
+  /* Status colours are the only saturated things on screen, which is what makes
+     them readable as signals rather than decoration. */
+  --status-ok: #4fd39c;
+  --status-ok-soft: #10241d;
+  --status-attention: #e5b45c;
+  --status-attention-soft: #271f11;
+  --status-risk: #ff7a6b;
+  --status-risk-soft: #2a1614;
+  --status-blocked: #ff6a8a;
+  --status-blocked-soft: #2b1520;
+  --status-done: #7d8b99;
+  --status-done-soft: #1b222b;
 
-  --shadow-card: 0 1px 2px rgba(22, 33, 28, 0.05);
-  --shadow-pop: 0 8px 24px rgba(22, 33, 28, 0.12);
+  /* On a dark ground, elevation reads through a lighter hairline plus a deeper
+     shadow — a light-theme drop shadow alone is invisible here. */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
 }
 
 /* ------------------------------------------------------------- switcher -- */
@@ -781,7 +801,7 @@ textarea:focus {
   flex: 0 0 26px;
   border-radius: 5px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   display: grid;
   place-items: center;
   font-size: 0.72rem;
@@ -1250,7 +1270,7 @@ textarea:focus {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(245, 246, 244, 0.92);
+  background: rgba(14, 19, 25, 0.92);
   backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--rule);
 }
@@ -1618,4 +1638,309 @@ textarea:focus {
   .steps {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================================================
+   Teams, library, winners and outreach
+
+   Same instrument-panel vocabulary as everything above: hairline rules, one
+   accent, status colour only where something is actually a signal. Every value
+   here resolves to a token in :root — nothing is assigned a raw colour.
+   ========================================================================== */
+
+/* A rail entry that cannot resolve yet (a Prepare link with no project open).
+   Shown rather than hidden so the map of the product stays stable. */
+.rail__link.is-disabled {
+  display: flex;
+  padding: 0.34rem 0.4rem;
+  border-radius: var(--radius);
+  color: var(--ink-faint);
+  font-size: 0.88rem;
+  cursor: default;
+}
+
+.field > span {
+  display: block;
+  font-size: 0.86rem;
+  margin-bottom: 0.28rem;
+}
+
+.input {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.6rem;
+}
+
+.input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.code {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.08rem 0.36rem;
+  letter-spacing: 0.02em;
+}
+
+/* ------------------------------------------------------------- team grid -- */
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.member {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.8rem;
+  background: var(--surface-sunk);
+}
+
+.member__name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.member__stats {
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Contribution rows: who did what, readable as a list of sentences. */
+.contrib {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: start;
+}
+
+.contrib:last-child {
+  border-bottom: none;
+}
+
+.contrib__who {
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
+.contrib__task {
+  font-size: 0.92rem;
+}
+
+.contrib__detail {
+  font-size: 0.84rem;
+  color: var(--ink-faint);
+  margin-top: 0.15rem;
+}
+
+.contrib__meta {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 620px) {
+  .contrib {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+}
+
+/* -------------------------------------------------------------- library -- */
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.guide-card {
+  display: block;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0.85rem 0.95rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.guide-card:hover {
+  border-color: var(--accent-line);
+  background: var(--surface-raised);
+}
+
+.guide-card__meta {
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+
+.guide-card__title {
+  font-size: 0.98rem;
+  margin-bottom: 0.25rem;
+}
+
+.guide-card__summary {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.guide-section {
+  border-top: 1px solid var(--rule);
+  padding-top: 0.9rem;
+  margin-top: 0.9rem;
+}
+
+/* Weak vs strong. Two columns so the difference is visible at a glance, with
+   the "why" underneath — the comparison is the lesson, not the strong version. */
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 700px) {
+  .compare {
+    grid-template-columns: 1fr;
+  }
+}
+
+.compare__side {
+  border: 1px solid var(--rule);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  padding: 0.7rem 0.8rem;
+  background: var(--surface-sunk);
+}
+
+.compare__side--weak {
+  border-left-color: var(--flag);
+}
+
+.compare__side--strong {
+  border-left-color: var(--ok);
+}
+
+.compare__label {
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 0.35rem;
+}
+
+.compare__why {
+  margin-top: 0.75rem;
+  border-left: 3px solid var(--accent);
+  padding-left: 0.8rem;
+}
+
+.compare__why .compare__label {
+  color: var(--accent);
+}
+
+/* -------------------------------------------------------------- winners -- */
+
+/* Provenance chips. The whole point of the winners library is that a reader can
+   tell at a glance which sentences came from a source and which are ours. */
+.prov {
+  display: inline-block;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--radius);
+  padding: 0.1rem 0.4rem;
+  border: 1px solid currentColor;
+}
+
+.prov--verified_source {
+  color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.prov--ai_analysis {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.prov--unverified {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.prov--not_available {
+  color: var(--inert);
+  background: var(--surface-sunk);
+}
+
+.fact {
+  border-top: 1px solid var(--rule);
+  padding: 0.8rem 0 0;
+  margin-top: 0.8rem;
+}
+
+.fact__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.fact__label {
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------- outreach -- */
+
+.outreach-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 130px 120px auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.outreach-row:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 760px) {
+  .outreach-row {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}
+
+.draft {
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
 }

@@ -41,6 +41,7 @@ export default function WorkspaceProjects() {
         (!needle ||
           r.title.toLowerCase().includes(needle) ||
           r.owner_name.toLowerCase().includes(needle) ||
+          r.member_names.some((n) => n.toLowerCase().includes(needle)) ||
           r.current_question.toLowerCase().includes(needle)) &&
         (!stage || r.stage === stage) &&
         (!status || r.status === status) &&
@@ -64,13 +65,30 @@ export default function WorkspaceProjects() {
 
   const columns: Column<WorkspaceProjectRow>[] = [
     {
-      key: "student",
-      header: "Student",
+      key: "type",
+      header: "Type",
+      sortValue: (r) => r.owner_kind,
+      render: (r) => (
+        <Pill tone={r.owner_kind === "team" ? "ok" : "neutral"}>
+          {r.owner_kind === "team" ? "Team" : "Individual"}
+        </Pill>
+      ),
+    },
+    {
+      key: "members",
+      header: "Members",
+      // Team projects sort under the team name; individual ones under the
+      // student. Same column, because to a workspace lead they are the same
+      // question: whose project is this?
       sortValue: (r) => r.owner_name,
       render: (r) => (
         <>
           <div className="dt__primary">{r.owner_name}</div>
-          <div className="dt__sub">{humanise(r.category)}</div>
+          <div className="dt__sub">
+            {r.owner_kind === "team" && r.member_names.length > 0
+              ? r.member_names.join(", ")
+              : humanise(r.category)}
+          </div>
         </>
       ),
     },

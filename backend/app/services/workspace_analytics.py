@@ -21,10 +21,11 @@ from app.models.enums import (
     WorkspaceRole,
 )
 from app.models.project import Project, User
+from app.models.team import Team
 from app.models.workspace import Evaluation, MentorComment, PosterDraft, TimelineTask
 from app.models.workspace_org import Workspace, WorkspaceMembership
 from app.services import project_status_service as status_service
-from app.services import workspace_service
+from app.services import team_service, workspace_service
 from app.services.readiness import AREA_LABELS, compute as compute_readiness
 
 # Progress areas surfaced in the compact per-student view.
@@ -37,8 +38,14 @@ class ProjectRow:
 
     project_id: int
     title: str
-    owner_id: int
+    # Null for a team project — ``owner_name`` carries the team name instead, so
+    # one catalog can list individual and team work side by side.
+    owner_id: int | None
     owner_name: str
+    owner_kind: str
+    team_id: int | None
+    team_name: str | None
+    member_names: list[str]
     category: str
     project_type: str
     stage: str
@@ -100,7 +107,7 @@ def visible_projects(
     )
     if workspace_service.is_oversight(membership):
         return projects
-    return [p for p in projects if workspace_service.can_view_project(p, membership)]
+    return [p for p in projects if workspace_service.can_view_project(db, p, membership)]
 
 
 def build_row(db: Session, project: Project, today: date | None = None) -> ProjectRow:
@@ -122,8 +129,18 @@ def build_row(db: Session, project: Project, today: date | None = None) -> Proje
         min(100, round(filled / 8 * 100)) if filled else _task_percent(tasks, {"poster"})
     )
 
-    owner = db.get(User, project.owner_id)
-    mentor = db.get(User, project.mentor_id) if project.mentor_id else None
+    team = db.get(Team, project.owner_team_id) if project.owner_team_id else None
+    if team is not None:
+        members = team_service.members_of(db, team.id)
+        member_names = [m.name for m in members]
+        owner_label = team.name
+    else:
+        owner = db.get(User, project.owner_id) if project.owner_id else None
+        member_names = [owner.name] if owner else []
+        owner_label = owner.name if owner else "Unknown"
+
+    mentor_id = project.mentor_id or (team.mentor_id if team else None)
+    mentor = db.get(User, mentor_id) if mentor_id else None
 
     safety_flags: list[str] = []
     if evaluation:
@@ -152,7 +169,11 @@ def build_row(db: Session, project: Project, today: date | None = None) -> Proje
         project_id=project.id,
         title=project.title,
         owner_id=project.owner_id,
-        owner_name=owner.name if owner else "Unknown",
+        owner_name=owner_label,
+        owner_kind=str(project.owner_kind),
+        team_id=team.id if team else None,
+        team_name=team.name if team else None,
+        member_names=member_names,
         category=str(project.category),
         project_type=str(project.project_type),
         stage=str(project.stage),

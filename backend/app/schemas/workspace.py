@@ -67,6 +67,11 @@ class JoinRequest(BaseModel):
     join_code: str = Field(min_length=3, max_length=40)
 
 
+class TeamRef(BaseModel):
+    id: int
+    name: str
+
+
 class MemberOut(BaseModel):
     user_id: int
     name: str
@@ -76,6 +81,7 @@ class MemberOut(BaseModel):
     project_count: int
     mentoring_count: int
     last_activity: date | None
+    teams: list[TeamRef] = []
 
 
 class RoleUpdate(BaseModel):
@@ -108,8 +114,14 @@ class AcceptInvitation(BaseModel):
 class WorkspaceProjectRow(BaseModel):
     project_id: int
     title: str
-    owner_id: int
+    # Null on a team project; ``owner_name`` is then the team's name and
+    # ``member_names`` lists who is on it.
+    owner_id: int | None = None
     owner_name: str
+    owner_kind: str = "individual"
+    team_id: int | None = None
+    team_name: str | None = None
+    member_names: list[str] = []
     category: str
     project_type: str
     stage: str

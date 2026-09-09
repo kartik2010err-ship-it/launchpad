@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useParams } from "react-router-dom";
 import { api } from "../api/client";
 import { useAsync } from "../api/useAsync";
-import { useAuth } from "../state/auth";
+import AppRail from "../components/AppRail";
 import { ErrorNote, Loading } from "../components/ui";
 import { createContext, useContext } from "react";
 import type { Project } from "../api/types";
@@ -36,17 +36,11 @@ const SECTIONS: [string, string][] = [
 export default function ProjectLayout() {
   const { projectId } = useParams();
   const id = Number(projectId);
-  const { user, signOut } = useAuth();
   const { data: project, error, loading, reload } = useAsync(() => api.getProject(id), [id]);
 
   return (
     <div className="shell">
-      <nav className="rail">
-        <NavLink to="/projects" className="rail__brand" style={{ textDecoration: "none", color: "inherit" }}>
-          Research Coach
-          <span>{project ? project.title : "Loading project"}</span>
-        </NavLink>
-
+      <AppRail projectId={id} subtitle={project ? project.title : "Loading project"}>
         <div className="rail__group">
           <div className="rail__heading">Project</div>
           {SECTIONS.map(([path, label]) => (
@@ -60,26 +54,7 @@ export default function ProjectLayout() {
             </NavLink>
           ))}
         </div>
-
-        <div className="rail__group">
-          <div className="rail__heading">Elsewhere</div>
-          <NavLink to="/projects" className="rail__link">
-            All projects
-          </NavLink>
-          {user?.role === "mentor" && (
-            <NavLink to="/mentor" className="rail__link">
-              Mentor dashboard
-            </NavLink>
-          )}
-        </div>
-
-        <div className="rail__foot">
-          <div>{user?.name}</div>
-          <button className="btn btn--quiet btn--small" style={{ marginTop: "0.4rem" }} onClick={signOut}>
-            Sign out
-          </button>
-        </div>
-      </nav>
+      </AppRail>
 
       <main className="main">
         <div className="main__inner">

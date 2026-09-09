@@ -15,8 +15,9 @@ from app.core.security import read_token
 from app.db.session import get_db
 from app.models.enums import WorkspaceRole
 from app.models.project import Project, User
+from app.models.team import Team
 from app.models.workspace_org import Workspace, WorkspaceMembership
-from app.services import workspace_service
+from app.services import team_service, workspace_service
 
 
 def current_user(
@@ -85,6 +86,46 @@ def require_owner(
 
 
 # --------------------------------------------------------------------------- #
+# Team scope
+# --------------------------------------------------------------------------- #
+
+
+def get_team(
+    team_id: int = Path(...),
+    workspace: Workspace = Depends(get_workspace),
+    membership: WorkspaceMembership = Depends(get_membership),
+    db: Session = Depends(get_db),
+) -> Team:
+    """A team, resolved inside a workspace the caller already belongs to.
+
+    Teams from another workspace 404 rather than 403 for the same reason
+    workspaces do: a non-member should not learn which team ids exist.
+    """
+
+    team = db.get(Team, team_id)
+    if team is None or team.workspace_id != workspace.id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Team not found.")
+    if not team_service.can_view_team(db, team, membership):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Team not found.")
+    return team
+
+
+def require_team_manager(
+    team: Team = Depends(get_team),
+    membership: WorkspaceMembership = Depends(get_membership),
+    db: Session = Depends(get_db),
+) -> Team:
+    """Settings changes: workspace owner/lead, or the team's own lead."""
+
+    if not team_service.can_edit_team_settings(db, team, membership):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Only a workspace lead or this team's lead can change the team.",
+        )
+    return team
+
+
+# --------------------------------------------------------------------------- #
 # Project scope
 # --------------------------------------------------------------------------- #
 
@@ -108,7 +149,7 @@ def get_project(
     if project is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found.")
     membership = _membership_or_404(db, project, user)
-    if not workspace_service.can_view_project(project, membership):
+    if not workspace_service.can_view_project(db, project, membership):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You cannot open this project.")
     return project
 
@@ -118,22 +159,27 @@ def get_editable_project(
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
 ) -> Project:
-    """Write access to the research itself: the student who owns it, only.
+    """Write access to the research itself: the students who own it, only.
 
-    Leads oversee and comment; they do not rewrite a student's work.
+    For an individual project that is its owner. For a team project it is every
+    member of the owning team — and no one else, including students on other
+    teams in the same workspace. Leads oversee and comment; they do not rewrite
+    a student's work.
     """
 
     project = db.get(Project, project_id)
     if project is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found.")
     membership = _membership_or_404(db, project, user)
-    if not workspace_service.can_view_project(project, membership):
+    if not workspace_service.can_view_project(db, project, membership):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You cannot open this project.")
-    if not workspace_service.can_edit_project(project, membership):
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN,
-            "Only the student who owns this project can change its research.",
+    if not workspace_service.can_edit_project(db, project, membership):
+        detail = (
+            "Only members of the team that owns this project can change its research."
+            if project.is_team_project
+            else "Only the student who owns this project can change its research."
         )
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail)
     return project
 
 

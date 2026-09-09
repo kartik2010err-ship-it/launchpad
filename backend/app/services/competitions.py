@@ -24,6 +24,13 @@ UNVERIFIED_NOTICE = (
 )
 
 
+TEAM_RULES_NOTICE = (
+    "These team settings are how Research Coach is configured — they are not a statement of "
+    "official eligibility. Confirm maximum team size, division rules and roster deadlines in the "
+    "official rulebook for your competition before you register."
+)
+
+
 @dataclass
 class CompetitionItem:
     key: str
@@ -34,12 +41,33 @@ class CompetitionItem:
 
 
 @dataclass
+class TeamRules:
+    """How this app treats teams for one competition.
+
+    Configuration, not compliance. ``source`` says where the numbers came from,
+    and it is ``UNVERIFIED_COMPETITION_ITEM`` for everything shipped by default,
+    because no official rulebook has been loaded. Enforcing a limit here proves
+    only that the app enforced it.
+    """
+
+    teams_allowed: bool = True
+    max_team_size: int = 3
+    min_team_size: int = 1
+    # Whether the roster freezes once someone marks the team as registered.
+    lock_membership_after_registration: bool = True
+    divisions: list[str] = field(default_factory=list)
+    source: RequirementSource = RequirementSource.UNVERIFIED_COMPETITION_ITEM
+    notice: str = TEAM_RULES_NOTICE
+
+
+@dataclass
 class Competition:
     key: str
     name: str
     official_source_loaded: bool
     items: list[CompetitionItem] = field(default_factory=list)
     notice: str = UNVERIFIED_NOTICE
+    team_rules: TeamRules = field(default_factory=TeamRules)
 
 
 _COMMON_UNVERIFIED = [
@@ -65,23 +93,30 @@ _CLUB_MILESTONES = [
 ]
 
 
+_FAIR_DIVISIONS = ["Junior division", "Senior division"]
+
 REGISTRY: dict[str, Competition] = {
     "azsef": Competition(
         key="azsef",
         name="Arizona Science and Engineering Fair (AzSEF)",
         official_source_loaded=False,
         items=_COMMON_UNVERIFIED + _CLUB_MILESTONES,
+        team_rules=TeamRules(max_team_size=3, divisions=list(_FAIR_DIVISIONS)),
     ),
     "isef_style": Competition(
         key="isef_style",
         name="ISEF-affiliated regional or state fair",
         official_source_loaded=False,
         items=_COMMON_UNVERIFIED + _CLUB_MILESTONES,
+        team_rules=TeamRules(max_team_size=3, divisions=list(_FAIR_DIVISIONS)),
     ),
     "school": Competition(
         key="school",
         name="School science fair",
         official_source_loaded=False,
+        team_rules=TeamRules(
+            max_team_size=4, lock_membership_after_registration=False
+        ),
         items=[
             CompetitionItem("school_signup", "Sign-up submitted to the school coordinator", RequirementSource.UNVERIFIED_COMPETITION_ITEM, 30),
             CompetitionItem("school_approval", "Teacher or sponsor approval of the research plan", RequirementSource.UNVERIFIED_COMPETITION_ITEM, 45),
@@ -93,6 +128,9 @@ REGISTRY: dict[str, Competition] = {
         name="Custom competition",
         official_source_loaded=False,
         items=_CLUB_MILESTONES,
+        team_rules=TeamRules(
+            max_team_size=3, lock_membership_after_registration=False
+        ),
         notice=(
             "You have entered a competition Research Coach knows nothing about. Every requirement "
             "here is a club milestone we made up. Add the real deadlines yourself from the official "
@@ -106,6 +144,12 @@ def get(key: str) -> Competition:
     return REGISTRY.get(key, REGISTRY["custom"])
 
 
+def team_rules(key: str | None) -> TeamRules:
+    """Team configuration for a competition key, falling back to ``custom``."""
+
+    return get(key or "custom").team_rules
+
+
 def listing() -> list[dict]:
     return [
         {
@@ -114,6 +158,24 @@ def listing() -> list[dict]:
             "official_source_loaded": c.official_source_loaded,
             "notice": c.notice,
             "item_count": len(c.items),
+            "team_rules": team_rules_payload(c.key),
         }
         for c in REGISTRY.values()
     ]
+
+
+def team_rules_payload(key: str | None) -> dict:
+    rules = team_rules(key)
+    competition = get(key or "custom")
+    return {
+        "competition_key": competition.key,
+        "competition_name": competition.name,
+        "teams_allowed": rules.teams_allowed,
+        "max_team_size": rules.max_team_size,
+        "min_team_size": rules.min_team_size,
+        "lock_membership_after_registration": rules.lock_membership_after_registration,
+        "divisions": list(rules.divisions),
+        "source": rules.source,
+        "official_source_loaded": competition.official_source_loaded,
+        "notice": rules.notice,
+    }

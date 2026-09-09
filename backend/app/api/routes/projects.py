@@ -101,7 +101,7 @@ def list_projects(
         out.extend(
             p
             for p in db.scalars(stmt)
-            if workspace_service.can_view_project(p, membership)
+            if workspace_service.can_view_project(db, p, membership)
         )
     out.sort(key=lambda p: p.updated_at, reverse=True)
     return out
@@ -264,7 +264,7 @@ def add_comment(
     user: User = Depends(current_user),
 ) -> MentorComment:
     membership = workspace_service.membership_for(db, project.workspace_id, user.id)
-    if not workspace_service.can_comment_on_project(project, membership):
+    if not workspace_service.can_comment_on_project(db, project, membership):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You cannot comment on this project.")
     comment = MentorComment(
         project_id=project.id,

@@ -47,7 +47,12 @@ from app.schemas.workspace import (
     WorkspaceSummaryStats,
     WorkspaceUpdate,
 )
-from app.services import activity_service, workspace_analytics, workspace_service
+from app.services import (
+    activity_service,
+    team_service,
+    workspace_analytics,
+    workspace_service,
+)
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
 
@@ -234,8 +239,11 @@ def list_members(
         person = db.get(User, row.user_id)
         if person is None:
             continue
-        owned = [p for p in projects if p.owner_id == person.id]
+        # A team project counts for every member of that team, not just whoever
+        # created it — there is no "creator" of shared work.
+        owned = [p for p in projects if workspace_service.owns_project(db, p, person.id)]
         last = max((p.last_activity for p in owned), default=None)
+        teams = team_service.teams_for_user(db, workspace.id, person.id)
         out.append(
             MemberOut(
                 user_id=person.id,
@@ -246,6 +254,7 @@ def list_members(
                 project_count=len(owned),
                 mentoring_count=sum(1 for p in projects if p.mentor_id == person.id),
                 last_activity=last.date() if last else None,
+                teams=[{"id": t.id, "name": t.name} for t in teams],
             )
         )
     return out
@@ -278,7 +287,7 @@ def change_member_role(
     )
     db.commit()
     projects = list(db.scalars(select(Project).where(Project.workspace_id == workspace.id)))
-    owned = [p for p in projects if p.owner_id == user_id]
+    owned = [p for p in projects if workspace_service.owns_project(db, p, user_id)]
     last = max((p.last_activity for p in owned), default=None)
     return MemberOut(
         user_id=person.id,
@@ -289,6 +298,10 @@ def change_member_role(
         project_count=len(owned),
         mentoring_count=sum(1 for p in projects if p.mentor_id == user_id),
         last_activity=last.date() if last else None,
+        teams=[
+            {"id": t.id, "name": t.name}
+            for t in team_service.teams_for_user(db, workspace.id, user_id)
+        ],
     )
 
 
@@ -534,9 +547,10 @@ def set_visibility(
 ):
     if project.workspace_id != workspace.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found.")
-    # The student decides how open their own work is; owners can override.
+    # The students decide how open their own work is; owners can override.
     if not (
-        project.owner_id == membership.user_id or membership.role == WorkspaceRole.OWNER
+        workspace_service.owns_project(db, project, membership.user_id)
+        or membership.role == WorkspaceRole.OWNER
     ):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You cannot change visibility here.")
     project.visibility = payload.visibility
@@ -560,7 +574,7 @@ def add_comment(
 ):
     if project.workspace_id != workspace.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found.")
-    if not workspace_service.can_comment_on_project(project, membership):
+    if not workspace_service.can_comment_on_project(db, project, membership):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "You cannot comment on this project.")
 
     comment = MentorComment(

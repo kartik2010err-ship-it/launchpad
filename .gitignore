@@ -2,6 +2,11 @@ __pycache__/
 *.pyc
 *.db
 .env
+.env.local
+.venv/
 node_modules/
 dist/
 .pytest_cache/
+tsconfig.tsbuildinfo
+.claude/worktrees/
+.DS_Store

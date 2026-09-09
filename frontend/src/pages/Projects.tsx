@@ -2,8 +2,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useAsync } from "../api/useAsync";
 import { useAuth } from "../state/auth";
-import { isOversight, useWorkspace } from "../state/workspace";
-import WorkspaceSwitcher from "../components/WorkspaceSwitcher";
+import { useWorkspace } from "../state/workspace";
+import AppRail from "../components/AppRail";
 import { Card, ErrorNote, Loading, Pill, formatDate, humanise } from "../components/ui";
 import { StatusPill } from "../components/workspace-ui";
 
@@ -12,7 +12,7 @@ import { StatusPill } from "../components/workspace-ui";
  * the same thing as everything else in the sidebar.
  */
 export default function Projects() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { current, loading: wsLoading } = useWorkspace();
   const navigate = useNavigate();
   const { data, error, loading } = useAsync(
@@ -20,31 +20,9 @@ export default function Projects() {
     [current?.id],
   );
 
-  const oversight = isOversight(current?.my_role);
-
   return (
     <div className="shell">
-      <nav className="rail">
-        <div className="rail__brand">
-          Research Coach
-          <span>Turn an idea into a question you can defend</span>
-        </div>
-
-        <WorkspaceSwitcher />
-
-        {current && (
-          <div className="rail__group">
-            <NavLinks workspaceId={current.id} oversight={oversight} />
-          </div>
-        )}
-
-        <div className="rail__foot">
-          <div>{user?.name}</div>
-          <button className="btn btn--quiet btn--small" style={{ marginTop: "0.4rem" }} onClick={signOut}>
-            Sign out
-          </button>
-        </div>
-      </nav>
+      <AppRail />
 
       <main className="main">
         <div className="main__inner stack">
@@ -106,7 +84,13 @@ export default function Projects() {
                   <span>{humanise(project.project_type)}</span>
                   <span>·</span>
                   <span>Updated {formatDate(project.updated_at)}</span>
-                  {project.owner_id !== user?.id && (
+                  {project.owner_kind === "team" && (
+                    <>
+                      <span>·</span>
+                      <span>team project</span>
+                    </>
+                  )}
+                  {project.owner_kind === "individual" && project.owner_id !== user?.id && (
                     <>
                       <span>·</span>
                       <span>shared with you</span>
@@ -119,25 +103,5 @@ export default function Projects() {
         </div>
       </main>
     </div>
-  );
-}
-
-function NavLinks({ workspaceId, oversight }: { workspaceId: number; oversight: boolean }) {
-  return (
-    <>
-      <div className="rail__heading">Workspace</div>
-      <Link className="rail__link" to={`/workspaces/${workspaceId}`}>
-        Dashboard
-      </Link>
-      <Link className="rail__link" to={`/workspaces/${workspaceId}/projects`}>
-        {oversight ? "All projects" : "Shared projects"}
-      </Link>
-      <Link className="rail__link" to={`/workspaces/${workspaceId}/members`}>
-        Members
-      </Link>
-      <Link className="rail__link" to={`/workspaces/${workspaceId}/activity`}>
-        Activity
-      </Link>
-    </>
   );
 }

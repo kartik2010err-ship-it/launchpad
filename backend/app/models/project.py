@@ -2,12 +2,22 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 
-from sqlalchemy import JSON, Date, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
 from app.models.enums import (
     Category,
+    ProjectOwnerKind,
     ProjectStatus,
     ProjectType,
     ProjectVisibility,
@@ -38,10 +48,30 @@ class User(Base):
 
 
 class Project(Base):
+    """One research project. Owned by exactly one student *or* one team.
+
+    The two ownership columns are mutually exclusive and the database enforces
+    it. A team project is not three projects that sync — it is one row, opened by
+    every member, which is why joining a team never copies anything.
+    """
+
     __tablename__ = "projects"
+    __table_args__ = (
+        CheckConstraint(
+            "(owner_id IS NOT NULL AND owner_team_id IS NULL)"
+            " OR (owner_id IS NULL AND owner_team_id IS NOT NULL)",
+            name="ck_project_single_owner",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    # Exactly one of these two is set; see the check constraint above.
+    owner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), default=None, index=True
+    )
+    owner_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"), default=None, index=True
+    )
     # Every project lives in exactly one workspace; that membership is what
     # authorization is checked against.
     workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id"), index=True)
@@ -83,8 +113,9 @@ class Project(Base):
     # dormant project look active.
     last_activity_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
-    owner: Mapped[User] = relationship(back_populates="projects", foreign_keys=[owner_id])
+    owner: Mapped[User | None] = relationship(back_populates="projects", foreign_keys=[owner_id])
     mentor: Mapped[User | None] = relationship(foreign_keys=[mentor_id])
+    owner_team: Mapped["Team | None"] = relationship(foreign_keys=[owner_team_id])  # noqa: F821
     revisions: Mapped[list[QuestionRevision]] = relationship(
         back_populates="project", cascade="all, delete-orphan", order_by="QuestionRevision.version"
     )
@@ -95,6 +126,18 @@ class Project(Base):
     @property
     def last_activity(self) -> datetime:
         return self.last_activity_at or self.updated_at
+
+    @property
+    def owner_kind(self) -> ProjectOwnerKind:
+        return (
+            ProjectOwnerKind.TEAM
+            if self.owner_team_id is not None
+            else ProjectOwnerKind.INDIVIDUAL
+        )
+
+    @property
+    def is_team_project(self) -> bool:
+        return self.owner_team_id is not None
 
 
 class QuestionRevision(Base):

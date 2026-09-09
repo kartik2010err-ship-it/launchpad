@@ -3,7 +3,8 @@
 
 import type * as T from "./types";
 
-const BASE = "https://research-coach-il9g.onrender.com";
+// Deployed default; point VITE_API_BASE at http://127.0.0.1:8000 to run locally.
+const BASE = import.meta.env.VITE_API_BASE ?? "https://research-coach-il9g.onrender.com";
 const TOKEN_KEY = "research-coach-token";
 
 export function getToken(): string | null {
@@ -181,4 +182,85 @@ export const api = {
     get<T.WorkspaceComment[]>(`/workspaces/${wsId}/projects/${projectId}/comments`),
   addWorkspaceComment: (wsId: number, projectId: number, payload: Record<string, unknown>) =>
     post<T.WorkspaceComment>(`/workspaces/${wsId}/projects/${projectId}/comments`, payload),
+
+  /* --------------------------------------------------------------- teams -- */
+
+  teams: (wsId: number) => get<T.TeamSummary[]>(`/workspaces/${wsId}/teams`),
+  team: (wsId: number, teamId: number) => get<T.TeamSummary>(`/workspaces/${wsId}/teams/${teamId}`),
+  createTeam: (wsId: number, payload: Record<string, unknown>) =>
+    post<T.TeamSummary>(`/workspaces/${wsId}/teams`, payload),
+  updateTeam: (wsId: number, teamId: number, payload: Record<string, unknown>) =>
+    patch<T.TeamSummary>(`/workspaces/${wsId}/teams/${teamId}`, payload),
+  archiveTeam: (wsId: number, teamId: number) =>
+    post<T.TeamSummary>(`/workspaces/${wsId}/teams/${teamId}/archive`),
+  // Deliberately a different field name from the workspace join code: posting
+  // one where the other belongs should fail loudly, not join the wrong thing.
+  joinTeam: (wsId: number, team_join_code: string) =>
+    post<T.TeamSummary>(`/workspaces/${wsId}/teams/join`, { team_join_code }),
+  leaveTeam: (wsId: number, teamId: number, userId: number) =>
+    request<void>(`/workspaces/${wsId}/teams/${teamId}/members/${userId}`, { method: "DELETE" }),
+  setTeamMemberRole: (wsId: number, teamId: number, userId: number, role: T.TeamRole) =>
+    patch<T.TeamSummary>(`/workspaces/${wsId}/teams/${teamId}/members/${userId}`, { role }),
+  assignTeamMentor: (wsId: number, teamId: number, mentor_id: number | null) =>
+    patch<T.TeamSummary>(`/workspaces/${wsId}/teams/${teamId}/mentor`, { mentor_id }),
+  setTeamLock: (wsId: number, teamId: number, locked: boolean) =>
+    patch<T.TeamSummary>(`/workspaces/${wsId}/teams/${teamId}/lock`, { locked }),
+  teamDashboard: (wsId: number, teamId: number) =>
+    get<T.TeamDashboardData>(`/workspaces/${wsId}/teams/${teamId}/dashboard`),
+  createTeamProject: (wsId: number, teamId: number, payload: Record<string, unknown>) =>
+    post<{ project_id: number; title: string; team_id: number }>(
+      `/workspaces/${wsId}/teams/${teamId}/project`,
+      payload,
+    ),
+  contributions: (wsId: number, teamId: number) =>
+    get<T.Contribution[]>(`/workspaces/${wsId}/teams/${teamId}/contributions`),
+  addContribution: (wsId: number, teamId: number, payload: Record<string, unknown>) =>
+    post<T.Contribution>(`/workspaces/${wsId}/teams/${teamId}/contributions`, payload),
+  updateContribution: (wsId: number, teamId: number, id: number, payload: Record<string, unknown>) =>
+    patch<T.Contribution>(`/workspaces/${wsId}/teams/${teamId}/contributions/${id}`, payload),
+  deleteContribution: (wsId: number, teamId: number, id: number) =>
+    request<void>(`/workspaces/${wsId}/teams/${teamId}/contributions/${id}`, { method: "DELETE" }),
+
+  /* ----------------------------------------------------- research library -- */
+
+  libraryCategories: () =>
+    get<{ key: T.GuideCategory; label: string; guide_count: number }[]>("/library/categories"),
+  guides: (query: Record<string, string> = {}) => {
+    const search = new URLSearchParams(Object.entries(query).filter(([, v]) => v)).toString();
+    return get<T.GuideSummary[]>(`/library/guides${search ? `?${search}` : ""}`);
+  },
+  guide: (id: string) => get<T.GuideDetail>(`/library/guides/${id}`),
+  recommendedGuides: (projectId: number) =>
+    get<{ guides: T.RecommendedGuide[]; stage_guides: T.RecommendedGuide[]; evaluated: boolean }>(
+      `/projects/${projectId}/recommended-guides`,
+    ),
+
+  /* ---------------------------------------------------- winning projects -- */
+
+  winningProjects: (query: Record<string, string> = {}) => {
+    const search = new URLSearchParams(Object.entries(query).filter(([, v]) => v)).toString();
+    return get<T.WinningProjectList>(`/winning-projects${search ? `?${search}` : ""}`);
+  },
+  winningProject: (id: number) => get<T.WinningProjectBreakdown>(`/winning-projects/${id}`),
+  similarWinningProjects: (projectId: number) =>
+    get<{ projects: T.WinningProjectSummary[]; warning: string; empty_notice: string | null }>(
+      `/projects/${projectId}/similar-winning-projects`,
+    ),
+
+  /* ------------------------------------------------------------ outreach -- */
+
+  outreachTemplates: () =>
+    get<{ templates: T.OutreachTemplate[]; spam_warning: string; etiquette: string[] }>(
+      "/outreach/templates",
+    ),
+  buildOutreachDraft: (payload: Record<string, unknown>) =>
+    post<T.OutreachDraft>("/outreach/draft", payload),
+  outreachContacts: () => get<T.OutreachContact[]>("/outreach/contacts"),
+  createOutreachContact: (payload: Record<string, unknown>) =>
+    post<T.OutreachContact>("/outreach/contacts", payload),
+  updateOutreachContact: (id: number, payload: Record<string, unknown>) =>
+    patch<T.OutreachContact>(`/outreach/contacts/${id}`, payload),
+  deleteOutreachContact: (id: number) =>
+    request<void>(`/outreach/contacts/${id}`, { method: "DELETE" }),
+  outreachSummary: () => get<T.OutreachSummary>("/outreach/summary"),
 };

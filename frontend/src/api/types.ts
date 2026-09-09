@@ -47,10 +47,16 @@ export interface InterviewTurn {
   followup_note: string | null;
 }
 
+export type ProjectOwnerKind = "individual" | "team";
+
 export interface Project {
   id: number;
   title: string;
-  owner_id: number;
+  // Exactly one of these is set. A team project has owner_id null and every
+  // member of owner_team_id edits this same record.
+  owner_id: number | null;
+  owner_team_id: number | null;
+  owner_kind: ProjectOwnerKind;
   workspace_id: number;
   mentor_id: number | null;
   visibility: ProjectVisibility;
@@ -432,13 +438,20 @@ export interface WorkspaceMember {
   project_count: number;
   mentoring_count: number;
   last_activity: string | null;
+  teams: { id: number; name: string }[];
 }
 
 export interface WorkspaceProjectRow {
   project_id: number;
   title: string;
-  owner_id: number;
+  // Null on a team project: owner_name is then the team name and member_names
+  // lists who is on it. One catalog, both ownership modes.
+  owner_id: number | null;
   owner_name: string;
+  owner_kind: ProjectOwnerKind;
+  team_id: number | null;
+  team_name: string | null;
+  member_names: string[];
   category: string;
   project_type: string;
   stage: string;
@@ -565,4 +578,286 @@ export interface Invitation {
   token: string;
   expires_at: string;
   accepted_at: string | null;
+}
+
+/* ========================================================================== *
+ * Teams
+ * ========================================================================== */
+
+export type TeamRole = "team_lead" | "member";
+
+export interface CompetitionTeamRules {
+  competition_key: string;
+  competition_name: string;
+  teams_allowed: boolean;
+  max_team_size: number;
+  min_team_size: number;
+  lock_membership_after_registration: boolean;
+  divisions: string[];
+  source: RequirementSource;
+  official_source_loaded: boolean;
+  notice: string;
+}
+
+export interface TeamCapacity {
+  member_count: number;
+  max_team_size: number;
+  seats_left: number;
+  is_full: boolean;
+  limit_source: "team_override" | "competition_config";
+  membership_locked: boolean;
+  rules: CompetitionTeamRules;
+  notice: string;
+}
+
+export interface TeamSummary {
+  id: number;
+  workspace_id: number;
+  name: string;
+  description: string | null;
+  join_code: string | null;
+  is_discoverable: boolean;
+  is_archived: boolean;
+  membership_locked: boolean;
+  mentor_id: number | null;
+  mentor_name: string | null;
+  competition_key: string | null;
+  member_count: number;
+  max_team_size: number;
+  seats_left: number;
+  member_names: string[];
+  project_id: number | null;
+  project_title: string | null;
+  readiness: number | null;
+  stage: string | null;
+  status: ProjectStatus | null;
+  next_deadline: string | null;
+  i_am_member: boolean;
+  created_at: string;
+}
+
+export interface TeamMember {
+  user_id: number;
+  name: string;
+  email: string;
+  role: TeamRole;
+  joined_at: string;
+  contribution_count: number;
+  completed_count: number;
+  hours: number;
+}
+
+export interface Contribution {
+  id: number;
+  project_id: number;
+  team_id: number;
+  user_id: number;
+  user_name: string;
+  task: string;
+  description: string | null;
+  contribution_date: string | null;
+  hours: number | null;
+  completed: boolean;
+  requested_by_id: number | null;
+  requested_by_name: string | null;
+  created_at: string;
+}
+
+export interface TeamDashboardData {
+  team: TeamSummary;
+  members: TeamMember[];
+  capacity: TeamCapacity;
+  can_edit_project: boolean;
+  can_manage_team: boolean;
+  project: {
+    id: number;
+    title: string;
+    current_question: string;
+    stage: string;
+    status: ProjectStatus;
+    readiness: number | null;
+    category: string;
+    project_type: string;
+    competition_name: string | null;
+    competition_date: string | null;
+    days_to_competition: number | null;
+    next_deadline: string | null;
+    next_task: string | null;
+    mentor_name: string | null;
+    visibility: ProjectVisibility;
+  } | null;
+  tasks: {
+    id: number;
+    title: string;
+    phase: string;
+    status: TaskStatus;
+    due_date: string | null;
+    priority: Priority;
+  }[];
+  contributions: Contribution[];
+  contribution_rollup: { user_id: number; name: string; tasks: number; completed: number; hours: number }[];
+  notebook: { id: number; entry_date: string; what_was_done: string; observations: string | null; created_at: string }[];
+  comments: {
+    id: number;
+    author_name: string;
+    author_role: string;
+    body: string;
+    comment_type: string;
+    requires_action: boolean;
+    resolved: boolean;
+    created_at: string;
+  }[];
+  activity: { id: number; actor_name: string; kind: string; action: string; summary: string; created_at: string }[];
+}
+
+/* ========================================================================== *
+ * Research Library
+ * ========================================================================== */
+
+export type GuideCategory =
+  | "research_fundamentals"
+  | "experimental_design"
+  | "statistics"
+  | "research_and_literature"
+  | "data"
+  | "science_fair";
+
+export interface GuideSummary {
+  id: string;
+  title: string;
+  category: GuideCategory;
+  category_label: string;
+  summary: string;
+  read_minutes: number;
+  tags: string[];
+  has_comparisons: boolean;
+}
+
+export interface GuideDetail extends GuideSummary {
+  sections: { heading: string; body: string; points: string[] }[];
+  comparisons: { label: string; weak: string; strong: string; why: string }[];
+  related: GuideSummary[];
+}
+
+export interface RecommendedGuide {
+  guide_id: string;
+  title: string;
+  category: GuideCategory;
+  summary: string;
+  read_minutes: number;
+  reason: string;
+}
+
+/* ========================================================================== *
+ * Winning Projects
+ * ========================================================================== */
+
+export type SourceConfidence = "verified_source" | "unverified" | "ai_analysis" | "not_available";
+
+export interface WinningProjectSummary {
+  id: number;
+  title: string;
+  year: number | null;
+  competition_name: string | null;
+  category: string;
+  project_type: string;
+  division: string | null;
+  is_team: boolean;
+  team_size: number | null;
+  award_title: string | null;
+  is_illustrative: boolean;
+  source_name: string;
+  source_url: string | null;
+  has_breakdown: boolean;
+  notice: string | null;
+}
+
+export interface SourcedField {
+  value: string | Record<string, string> | null;
+  provenance: SourceConfidence;
+}
+
+export interface WinningProjectBreakdown extends WinningProjectSummary {
+  facts: Record<string, SourcedField>;
+  fields_available: string[];
+  fields_missing: string[];
+  sufficient_for_breakdown: boolean;
+  insufficient_notice: string | null;
+  judging: { commentary: string | null; provenance: SourceConfidence; notice: string | null };
+  lessons: { lesson: string; detail: string; guide_id: string }[];
+  lessons_provenance: SourceConfidence;
+  analysis_notice: string;
+  copying_warning: string;
+}
+
+export interface WinningProjectList {
+  projects: WinningProjectSummary[];
+  filters: {
+    years: number[];
+    competitions: string[];
+    categories: string[];
+    project_types: string[];
+    total: number;
+    verified_total: number;
+    illustrative_total: number;
+  };
+  empty_notice: string | null;
+  copying_warning: string;
+}
+
+/* ========================================================================== *
+ * Research Outreach
+ * ========================================================================== */
+
+export type OutreachStatus =
+  | "draft"
+  | "sent"
+  | "replied"
+  | "meeting_scheduled"
+  | "no_response"
+  | "declined";
+
+export interface OutreachTemplate {
+  key: string;
+  name: string;
+  when_to_use: string;
+  structure: { section: string; guidance: string }[];
+  ask_examples: string[];
+}
+
+export interface OutreachDraft {
+  template_key: string;
+  subject: string;
+  body: string;
+  sections: { section: string; content: string }[];
+  word_count: number;
+  spam_warning: string;
+  etiquette: string[];
+  before_you_send: string[];
+}
+
+export interface OutreachContact {
+  id: number;
+  researcher_name: string;
+  institution: string | null;
+  email: string | null;
+  their_work: string | null;
+  project_id: number | null;
+  template_key: string | null;
+  subject: string | null;
+  body: string | null;
+  status: OutreachStatus;
+  status_label: string;
+  sent_on: string | null;
+  follow_up_on: string | null;
+  follow_up_done: boolean;
+  follow_up_due: boolean;
+  notes: string | null;
+}
+
+export interface OutreachSummary {
+  total: number;
+  by_status: { status: OutreachStatus; label: string; count: number }[];
+  follow_ups_due: OutreachContact[];
+  spam_warning: string;
 }

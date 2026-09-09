@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import { useAsync } from "../api/useAsync";
 import { useProject } from "./ProjectLayout";
 import { BasisChip, Callout, Card, ErrorNote, Findings, Gauge, Loading, Pill, formatDate } from "../components/ui";
+import CoachRecommendations from "../components/CoachRecommendations";
 
 function scoreCaption(score: number, completeness: number): string {
   if (completeness < 60) {
@@ -97,6 +98,8 @@ export default function Analysis() {
       <Card title="Mentor summary">
         <p style={{ marginBottom: 0 }}>{result.mentor_summary}</p>
       </Card>
+
+      <CoachRecommendations projectId={project.id} />
 
       {result.safety.flags.length > 0 && (
         <Callout tone="flag" title="Rules and safety screening">

@@ -7,7 +7,16 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, planning, projects, workspace, workspaces
+from app.api.routes import (
+    auth,
+    library,
+    outreach,
+    planning,
+    projects,
+    teams,
+    workspace,
+    workspaces,
+)
 from app.core.config import get_settings
 from app.db.session import Base, engine
 
@@ -15,6 +24,9 @@ from app.db.session import Base, engine
 from app.models import project as _project_models  # noqa: F401
 from app.models import workspace_org as _workspace_org_models  # noqa: F401
 from app.models import workspace as _workspace_models  # noqa: F401
+from app.models import team as _team_models  # noqa: F401
+from app.models import outreach as _outreach_models  # noqa: F401
+from app.models import library as _library_models  # noqa: F401
 
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
@@ -41,6 +53,9 @@ app.include_router(projects.router)
 app.include_router(planning.router)
 app.include_router(workspace.router)
 app.include_router(workspaces.router)
+app.include_router(teams.router)
+app.include_router(library.router)
+app.include_router(outreach.router)
 
 
 @app.on_event("startup")

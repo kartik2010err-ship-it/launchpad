@@ -1,0 +1,197 @@
+{
+  "$comment": [
+    "Winning-projects dataset for Research Coach.",
+    "",
+    "This file ships with ZERO real past projects. Every record below has",
+    "is_illustrative=true, which means it is a constructed teaching example written",
+    "by this application to show what a strong write-up looks like. None of them are",
+    "real projects, real students, or real awards, and the UI labels them as such.",
+    "",
+    "To load real past projects, append records with is_illustrative omitted (or",
+    "false). Those records are REQUIRED to carry a source_url so a student can check",
+    "them, and may only include judging_commentary when the competition itself",
+    "published judge remarks (set judging_commentary_published=true alongside it).",
+    "Ingestion refuses anything that fails those checks — see",
+    "app/services/winners_service.py.",
+    "",
+    "Load with: python -m app.services.winners_service [path/to/file.json]",
+    "",
+    "Record schema:",
+    "  external_id*, title*, category*, source_key*, source_name*",
+    "  source_url (required unless is_illustrative), license_note, year,",
+    "  competition_name, project_type (scientific|engineering), division,",
+    "  is_team, team_size, award_title, abstract, research_question,",
+    "  problem_statement, methodology, variables{}, data_summary, results_summary,",
+    "  judging_commentary + judging_commentary_published, field_provenance{}"
+  ],
+  "records": [
+    {
+      "external_id": "teaching-env-01",
+      "is_illustrative": true,
+      "source_key": "research_coach_teaching",
+      "source_name": "Research Coach teaching example (constructed, not a real project)",
+      "title": "Biochar amendment rate and nitrate leaching under high-intensity rainfall",
+      "category": "environmental_science",
+      "project_type": "scientific",
+      "year": null,
+      "competition_name": null,
+      "is_team": false,
+      "research_question": "How does biochar amendment rate (0, 2, 4 and 8% by mass) affect nitrate concentration in leachate from sandy loam under simulated high-intensity rainfall?",
+      "problem_statement": "Nitrate leaching from agricultural soil contributes to groundwater contamination. Biochar is known to reduce leaching under steady irrigation, but monsoon-climate agriculture experiences short, intense rainfall events, and infiltration rate is known to change how amendments behave.",
+      "methodology": "Twenty-four repacked soil columns (8 cm diameter, 30 cm depth) were prepared at four biochar rates, six columns per rate, assigned by drawing lots. Each column received a single 40 mm rainfall event delivered over 20 minutes by a calibrated drip simulator. Leachate was collected for 90 minutes, volume recorded, and nitrate measured by ion-selective electrode calibrated against three standards before each run. All columns were run on the same day in interleaved order to avoid confounding rate with time.",
+      "variables": {
+        "independent": "Biochar amendment rate: 0, 2, 4, 8% by mass",
+        "dependent": "Nitrate concentration in leachate (mg/L)",
+        "controlled": "Soil type and packing density, rainfall depth and duration, column dimensions, initial soil moisture, ambient temperature, electrode calibration procedure",
+        "replicates": "6 columns per rate (24 total)"
+      },
+      "data_summary": "Twenty-four leachate samples, each measured in triplicate; the median of the three readings was used. Two runs were flagged in the notebook for partial sidewall flow and are reported both included and excluded.",
+      "results_summary": "Mean leachate nitrate fell from 41.2 mg/L at 0% (SD 3.9) to 26.8 mg/L at 4% (SD 4.4), a 35% reduction. The 8% rate did not differ meaningfully from 4% (25.9 mg/L, SD 5.1), indicating a plateau. Excluding the two flagged runs changed the 4% mean by less than 1 mg/L."
+    },
+    {
+      "external_id": "teaching-cs-01",
+      "is_illustrative": true,
+      "source_key": "research_coach_teaching",
+      "source_name": "Research Coach teaching example (constructed, not a real project)",
+      "title": "Quantised convolutional networks for tomato leaf disease detection on low-cost hardware",
+      "category": "computer_science",
+      "project_type": "engineering",
+      "is_team": true,
+      "team_size": 2,
+      "research_question": "Can an 8-bit quantised MobileNetV2 classify three tomato leaf diseases at above 85% accuracy while running inference in under 2 seconds on a device costing less than $80?",
+      "problem_statement": "Smallholder farmers lose crops to diseases that are visually identifiable but require expertise to distinguish. Existing detection models assume hardware that costs more than the intervention is worth.",
+      "methodology": "A MobileNetV2 classifier was fine-tuned on 3,200 labelled leaf images spanning three diseases plus healthy leaves, split 70/15/15 with no leaf appearing in more than one split. The model was quantised to 8-bit integers post-training. Accuracy was measured on the held-out test split before and after quantisation. Inference latency was measured as the median of 100 runs on a $72 Android device, with the device held at a fixed thermal state between runs.",
+      "variables": {
+        "independent": "Model precision: 32-bit float baseline vs 8-bit quantised",
+        "dependent": "Top-1 classification accuracy (%) and median inference latency (ms)",
+        "controlled": "Training data split, augmentation pipeline, random seed, target device, thermal state, image preprocessing"
+      },
+      "data_summary": "Per-class accuracy and a confusion matrix for both model versions; 100 latency measurements per version reported as median and interquartile range.",
+      "results_summary": "Quantisation reduced top-1 accuracy from 91.4% to 88.7% (a 2.7 point drop) while reducing median latency from 4,100 ms to 1,430 ms and model size from 14 MB to 3.9 MB. The largest accuracy loss was on the class with fewest training examples, which the write-up identifies as the main limitation."
+    },
+    {
+      "external_id": "teaching-bio-01",
+      "is_illustrative": true,
+      "source_key": "research_coach_teaching",
+      "source_name": "Research Coach teaching example (constructed, not a real project)",
+      "title": "pH dependence of catalase activity in potato extract",
+      "category": "biomedical_science",
+      "project_type": "scientific",
+      "is_team": false,
+      "research_question": "How does buffer pH (4, 5, 6, 7, 8, 9) affect the initial rate of oxygen production by catalase in potato extract at 22 °C?",
+      "problem_statement": "Enzyme activity is known to depend on pH, but textbook curves are usually presented without the underlying data. Measuring the curve directly connects the abstract claim about protein structure to an observation a student produced.",
+      "methodology": "Potato extract was prepared as a single batch, homogenised and filtered, then split so every condition used identical enzyme. For each pH, 2 mL of extract was combined with 5 mL of 3% hydrogen peroxide in the corresponding buffer. Oxygen production was measured as displaced water volume at 10-second intervals for 60 seconds; initial rate was taken as the slope over the first 30 seconds, where the response was linear. Five replicates per pH, run in randomised order across two sessions with session recorded.",
+      "variables": {
+        "independent": "Buffer pH: 4, 5, 6, 7, 8, 9",
+        "dependent": "Initial oxygen production rate (mL/s over first 30 s)",
+        "controlled": "Enzyme batch, extract volume, peroxide concentration and volume, temperature (22 ± 1 °C), apparatus, timing method",
+        "replicates": "5 per pH level"
+      },
+      "data_summary": "Thirty runs, each with seven timed volume readings; slopes fitted by least squares with R² reported per run to confirm linearity over the fitted window.",
+      "results_summary": "Rate peaked at pH 7 (0.42 mL/s, SD 0.04) and fell to 0.09 mL/s at pH 4 and 0.14 mL/s at pH 9. All fitted slopes had R² above 0.97 over the first 30 seconds. Session had no detectable effect on rate, supporting the decision to pool across sessions."
+    },
+    {
+      "external_id": "teaching-eng-01",
+      "is_illustrative": true,
+      "source_key": "research_coach_teaching",
+      "source_name": "Research Coach teaching example (constructed, not a real project)",
+      "title": "Clay-to-sawdust ratio and turbidity removal in ceramic pot water filters",
+      "category": "engineering",
+      "project_type": "engineering",
+      "is_team": true,
+      "team_size": 3,
+      "research_question": "How does clay-to-sawdust ratio (by volume: 4:1, 3:1, 2:1) affect turbidity removal and flow rate in fired ceramic pot filters?",
+      "problem_statement": "Ceramic pot filters are made locally from available materials, and the burnout material ratio controls pore size. A ratio that filters well but flows too slowly is not usable in practice, so the design question is a trade-off rather than a maximum.",
+      "methodology": "Nine filters were formed, three at each ratio, from a single clay batch and fired together in one kiln run to remove firing as a variable. Each filter was tested with 4 L of standardised turbid water (target 100 NTU, prepared from a single sediment stock). Turbidity was measured before and after with a nephelometer, and flow rate recorded as time to pass the first litre. Each filter was tested three times with a fixed rinse between runs.",
+      "variables": {
+        "independent": "Clay-to-sawdust ratio by volume: 4:1, 3:1, 2:1",
+        "dependent": "Turbidity removal (%) and flow rate (L/h)",
+        "controlled": "Clay batch, sawdust particle size, forming pressure, drying time, single kiln run, influent turbidity, water temperature, rinse procedure",
+        "replicates": "3 filters per ratio, 3 runs per filter"
+      },
+      "data_summary": "Twenty-seven runs; filter-level means used for comparison so that repeated runs on one filter are not treated as independent samples.",
+      "results_summary": "Turbidity removal was 96.1% at 4:1 (SD 1.2), 93.4% at 3:1 (SD 1.8) and 88.0% at 2:1 (SD 2.6), while flow rate rose from 0.9 L/h to 2.4 L/h across the same range. The write-up identifies 3:1 as the practical compromise and states explicitly that turbidity removal is not the same as microbiological safety, which was not tested."
+    },
+    {
+      "external_id": "teaching-behav-01",
+      "is_illustrative": true,
+      "source_key": "research_coach_teaching",
+      "source_name": "Research Coach teaching example (constructed, not a real project)",
+      "title": "Background audio condition and arithmetic task accuracy in adolescents",
+      "category": "behavioral_social_science",
+      "project_type": "scientific",
+      "is_team": false,
+      "research_question": "Does instrumental background audio at 60 dB change the number of correct answers on a three-minute arithmetic task, compared with silence, in students aged 14-16?",
+      "problem_statement": "Claims that music helps or harms studying are common and rarely tested with a fixed task. The interesting version of the question requires defining both the audio condition and the outcome tightly enough that another class could repeat it.",
+      "methodology": "Thirty-two participants completed the task under both conditions in a within-subject design, with condition order counterbalanced and a 10-minute gap between sessions. Two matched arithmetic sheets of equal length and difficulty were used, with sheet assignment randomised against condition. Audio level was verified at the seat position with a sound level meter before each session. The study was reviewed and approved before any data were collected, participation was voluntary, and responses were anonymised at collection.",
+      "variables": {
+        "independent": "Audio condition: instrumental audio at 60 dB vs silence",
+        "dependent": "Number of correct answers in three minutes",
+        "controlled": "Task length and difficulty, time limit, room, seating position, time of day, verified sound level; order and sheet counterbalanced"
+      },
+      "data_summary": "Sixty-four observations from 32 participants, analysed as within-participant differences so that individual arithmetic ability does not contribute to the comparison.",
+      "results_summary": "Mean difference was 1.2 more correct answers in silence (95% CI -0.3 to 2.7, n = 32, paired). The interval includes zero, so the study did not detect a reliable difference; the write-up reports this as a null result rather than restating the hypothesis, and notes that 60 dB instrumental audio is one narrow condition and says nothing about lyrics or other volumes."
+    },
+    {
+      "external_id": "teaching-phys-01",
+      "is_illustrative": true,
+      "source_key": "research_coach_teaching",
+      "source_name": "Research Coach teaching example (constructed, not a real project)",
+      "title": "Cold-temperature cycling and lithium-ion capacity retention",
+      "category": "physics",
+      "project_type": "scientific",
+      "is_team": false,
+      "research_question": "How does the number of charge-discharge cycles at -5 °C affect measured capacity retention in 18650 lithium-ion cells, relative to identical cells cycled at 20 °C?",
+      "problem_statement": "Battery capacity loss in cold conditions is widely reported but usually as a single figure. Measuring retention as a function of cycle count separates a temporary cold-temperature effect from lasting capacity loss.",
+      "methodology": "Twelve cells from a single production lot were split into two groups of six by random assignment. One group was cycled in a temperature-controlled chamber at -5 °C, the other at 20 °C, using identical charge and discharge currents. Capacity was measured for every cell at 20 °C after every ten cycles, so that measurement temperature never differed between groups. Cells were rested for two hours before each measurement.",
+      "variables": {
+        "independent": "Cycling temperature (-5 °C vs 20 °C) and cycle count (0-60 in steps of 10)",
+        "dependent": "Discharge capacity (mAh), all measured at 20 °C",
+        "controlled": "Cell lot, charge and discharge current, voltage cut-offs, rest period, measurement temperature, chamber humidity"
+      },
+      "data_summary": "Seven capacity measurements per cell across 60 cycles, 84 measurements in total; retention expressed as a percentage of each cell's own initial capacity to remove cell-to-cell variation.",
+      "results_summary": "After 60 cycles, cold-cycled cells retained 87.3% of initial capacity (SD 2.1) versus 96.0% (SD 1.4) for the room-temperature group. The gap widened approximately linearly with cycle count. Measuring all capacities at 20 °C is identified in the write-up as the design decision that lets the result be read as lasting loss rather than temporary cold performance."
+    },
+    {
+      "external_id": "teaching-chem-01",
+      "is_illustrative": true,
+      "source_key": "research_coach_teaching",
+      "source_name": "Research Coach teaching example (constructed, not a real project)",
+      "title": "Substrate composition and compressive strength of mycelium-bound packaging",
+      "category": "chemistry",
+      "project_type": "engineering",
+      "is_team": false,
+      "research_question": "How does substrate composition (hemp hurd, sawdust, and 50/50 blend) affect compressive strength at 10% deformation in mycelium-bound composite blocks?",
+      "problem_statement": "Mycelium composites are proposed as replacements for expanded polystyrene packaging. Whether they can meet a given strength requirement depends on the substrate the fungus is grown on, which is the variable a manufacturer would actually choose.",
+      "methodology": "Fifteen blocks (five per substrate) were grown from a single mycelium culture in identical 10 cm cube moulds, incubated together at 24 °C and 70% humidity for 14 days, then oven-dried at 60 °C to constant mass to halt growth. Compressive strength was measured on a materials tester at a fixed crosshead speed, recording force at 10% deformation. Block mass and density were recorded before testing.",
+      "variables": {
+        "independent": "Substrate: hemp hurd, sawdust, 50/50 blend",
+        "dependent": "Compressive stress at 10% deformation (kPa)",
+        "controlled": "Culture source, mould dimensions, incubation temperature, humidity, growth duration, drying schedule, crosshead speed",
+        "replicates": "5 blocks per substrate"
+      },
+      "data_summary": "Fifteen force-deformation curves; density recorded per block so that strength differences can be examined against density rather than assumed to come from substrate alone.",
+      "results_summary": "Hemp hurd blocks reached 168 kPa (SD 14), the blend 141 kPa (SD 11) and sawdust 96 kPa (SD 19). Density correlated with strength (r = 0.78, n = 15), and the write-up explicitly flags that substrate and density are partly confounded, proposing density-matched blocks as the follow-up."
+    },
+    {
+      "external_id": "teaching-math-01",
+      "is_illustrative": true,
+      "source_key": "research_coach_teaching",
+      "source_name": "Research Coach teaching example (constructed, not a real project)",
+      "title": "Comparing greedy and dynamic-programming schedules under bounded task variance",
+      "category": "mathematics",
+      "project_type": "scientific",
+      "is_team": false,
+      "research_question": "How does the variance of task durations affect the gap between a greedy earliest-deadline schedule and an optimal dynamic-programming schedule, measured as total tardiness?",
+      "problem_statement": "Greedy scheduling is used because it is fast, and the usual justification is that it is 'close enough'. How close depends on the input distribution, which is testable directly.",
+      "methodology": "Task sets of 20 jobs were generated with durations drawn from distributions with fixed mean and six variance levels. For each variance level, 500 independent task sets were generated with a fixed random seed sequence so results are reproducible. Both algorithms were run on every set, and total tardiness recorded for each. The optimal schedule was verified by exhaustive search on a subset of 10-job problems to confirm the dynamic-programming implementation was correct.",
+      "variables": {
+        "independent": "Variance of the task duration distribution (six levels, fixed mean)",
+        "dependent": "Relative tardiness gap: (greedy - optimal) / optimal",
+        "controlled": "Job count, mean duration, deadline generation rule, random seed sequence, hardware"
+      },
+      "data_summary": "3,000 paired comparisons (500 per variance level), reported as median gap with interquartile range because the gap distribution is right-skewed.",
+      "results_summary": "The median relative gap grew from 3.1% at the lowest variance to 27.4% at the highest, with the spread widening substantially. The verification step against exhaustive search on 10-job problems is reported alongside, since the comparison is only meaningful if the 'optimal' baseline is genuinely optimal."
+    }
+  ]
+}

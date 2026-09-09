@@ -19,19 +19,29 @@ from app.models.enums import (
     ActivityKind,
     Category,
     CommentType,
+    OutreachStatus,
     ProjectType,
     ProjectVisibility,
     Role,
     Stage,
     TaskStatus,
+    TeamRole,
     WorkspaceRole,
     WorkspaceType,
 )
+from app.models.outreach import OutreachContact
 from app.models.project import Project, User, utcnow
-from app.models.workspace import MentorComment, PosterDraft, TimelineTask
+from app.models.team import TeamContribution
+from app.models.workspace import MentorComment, NotebookEntry, PosterDraft, TimelineTask
 from app.models.workspace_org import ProjectActivity
 from app.schemas.project import InterviewAnswer, TimelineRequest
-from app.services import project_service, project_status_service, workspace_service
+from app.services import (
+    project_service,
+    project_status_service,
+    team_service,
+    winners_service,
+    workspace_service,
+)
 
 PASSWORD = "coach1234"
 
@@ -192,6 +202,17 @@ def run() -> None:
         db, creator=users[OUTSIDER[1]],
         name="Westbrook Academy Research", organization_name="Westbrook Academy",
         workspace_type=WorkspaceType.SCHOOL, description="A different school entirely.")
+
+    # The workspace that exercises teams: it holds both team-owned and
+    # individually-owned projects, which is the case the project catalog has to
+    # render in one table.
+    basis = workspace_service.create_workspace(
+        db, creator=users["priyanka@example.edu"],
+        name="BASIS Phoenix Science Fair", organization_name="BASIS Phoenix",
+        workspace_type=WorkspaceType.SCIENCE_FAIR_TEAM,
+        description="Team and individual entries for this season's regional fair.",
+        default_visibility=ProjectVisibility.WORKSPACE)
+    basis.join_code = "BASIS-SF-27"
     db.flush()
 
     # Same people, different authority in each space.
@@ -209,6 +230,17 @@ def run() -> None:
     workspace_service.add_member(db, biology, users["mentor@example.edu"], WorkspaceRole.LEAD)
     for email in ("grace@example.edu", "kevin@example.edu", "noah@example.edu"):
         workspace_service.add_member(db, biology, users[email], WorkspaceRole.MEMBER)
+
+    workspace_service.add_member(db, basis, users["andre@example.edu"], WorkspaceRole.MENTOR)
+    workspace_service.add_member(db, basis, users["mentor@example.edu"], WorkspaceRole.MENTOR)
+    workspace_service.add_member(db, basis, users["jordan@example.edu"], WorkspaceRole.LEAD)
+    for email in (
+        "maya@example.edu", "arjun@example.edu", "sarah@example.edu",
+        "kevin@example.edu", "grace@example.edu", "daniel@example.edu",
+        "liam@example.edu", "marcus@example.edu", "emma@example.edu",
+        "priya@example.edu",
+    ):
+        workspace_service.add_member(db, basis, users[email], WorkspaceRole.MEMBER)
 
     for email in list(users):
         workspace_service.ensure_personal_workspace(db, users[email])
@@ -312,6 +344,216 @@ def run() -> None:
         project_status_service.refresh(db, project)
         created.append(project)
 
+    # ---- teams and their shared projects ---------------------------------- #
+    #
+    # Each team owns exactly ONE project row. Every member opens that same row —
+    # nothing is copied per member, which is the whole point of owner_team_id.
+    team_specs = [
+        {
+            "name": "Team Coral",
+            "code": "CORAL-8K2P",
+            "description": "Reef imagery and early bleaching signatures.",
+            "mentor": "priyanka@example.edu",
+            "members": ["maya@example.edu", "arjun@example.edu", "sarah@example.edu"],
+            "lead": "maya@example.edu",
+            "title": "Coral Bleaching Research Project",
+            "question": "Can sparse autoencoder features of reef imagery predict temperature "
+                        "and CO2 stress before visible bleaching appears?",
+            "category": Category.ENVIRONMENTAL,
+            "ptype": ProjectType.SCIENTIFIC,
+            "stage": Stage.EXPERIMENTATION,
+            "weeks": 7,
+            "contributions": [
+                ("maya@example.edu", "Literature review", "Read 14 papers on bleaching indices; "
+                 "built the summary table the research gap came from.", 11.0, True),
+                ("maya@example.edu", "Experiment setup", "Configured the imaging rig and the "
+                 "temperature-controlled tanks.", 8.5, True),
+                ("arjun@example.edu", "Data analysis", "Wrote the autoencoder training pipeline "
+                 "and the feature extraction step.", 14.0, True),
+                ("arjun@example.edu", "Python visualisation", "Built the figure set: feature "
+                 "trajectories against measured stress.", 6.0, False),
+                ("sarah@example.edu", "Sample collection", "Ran the weekly imaging sessions and "
+                 "logged tank conditions.", 9.0, True),
+                ("sarah@example.edu", "Poster design", "Drafted the board layout and the method "
+                 "diagram.", 4.0, False),
+            ],
+        },
+        {
+            "name": "Team Neuro",
+            "code": "NEURO-4T7M",
+            "description": "Sleep, memory and reaction time in adolescents.",
+            "mentor": "mentor@example.edu",
+            "members": ["kevin@example.edu", "grace@example.edu"],
+            "lead": "kevin@example.edu",
+            "title": "Sleep and Memory Research Project",
+            "question": "Does self-reported sleep duration the previous night predict recall "
+                        "accuracy on a standard word-list task in 14-16 year olds?",
+            "category": Category.BEHAVIORAL_SOCIAL,
+            "ptype": ProjectType.SCIENTIFIC,
+            "stage": Stage.EXPERIMENTAL_DESIGN,
+            "weeks": 9,
+            "contributions": [
+                ("kevin@example.edu", "Protocol design", "Wrote the recall task protocol and the "
+                 "counterbalancing scheme.", 7.0, True),
+                ("kevin@example.edu", "Ethics paperwork", "Prepared the human-participants forms "
+                 "for review.", 3.5, False),
+                ("grace@example.edu", "Literature review", "Summarised prior sleep-and-recall "
+                 "studies and their sample sizes.", 8.0, True),
+                ("grace@example.edu", "Statistics plan", "Chose the paired analysis and wrote the "
+                 "pre-registration of the primary outcome.", 4.5, False),
+            ],
+        },
+        {
+            "name": "Team Aero",
+            "code": "AERO-9P3K",
+            "description": "Propeller geometry and hover efficiency.",
+            "mentor": "andre@example.edu",
+            "members": ["liam@example.edu", "marcus@example.edu", "emma@example.edu"],
+            "lead": "marcus@example.edu",
+            "title": "Drone Efficiency Engineering Project",
+            "question": "How does propeller pitch angle affect hover current draw at a fixed "
+                        "thrust on a 250 g quadcopter frame?",
+            "category": Category.ENGINEERING,
+            "ptype": ProjectType.ENGINEERING,
+            "stage": Stage.DATA_ANALYSIS,
+            "weeks": 5,
+            "contributions": [
+                ("marcus@example.edu", "Test rig build", "Built the thrust stand and wired the "
+                 "current logging.", 12.0, True),
+                ("liam@example.edu", "Trial runs", "Ran 30 hover trials across five pitch angles.",
+                 10.0, True),
+                ("emma@example.edu", "Data analysis", "Fitted current against pitch and produced "
+                 "the efficiency curve.", 7.5, True),
+                ("emma@example.edu", "Abstract draft", "Wrote the first abstract for mentor "
+                 "review.", 2.0, False),
+            ],
+        },
+    ]
+
+    teams = {}
+    for spec in team_specs:
+        team = team_service.create_team(
+            db, workspace=basis, creator=users[spec["mentor"]], name=spec["name"],
+            description=spec["description"], competition_key="azsef")
+        team.join_code = spec["code"]
+        team_service.assign_mentor(db, team, users[spec["mentor"]].id)
+        for email in spec["members"]:
+            team_service.add_team_member(
+                db, team, users[email],
+                TeamRole.TEAM_LEAD if email == spec["lead"] else TeamRole.MEMBER)
+        db.flush()
+        teams[spec["name"]] = team
+
+        project = Project(
+            owner_id=None, owner_team_id=team.id, workspace_id=basis.id,
+            mentor_id=team.mentor_id, visibility=ProjectVisibility.WORKSPACE,
+            title=spec["title"], grade_level=11, project_type=spec["ptype"],
+            category=spec["category"], current_question=spec["question"], stage=spec["stage"],
+            competition_key="azsef",
+            competition_name="Arizona Science and Engineering Fair (AzSEF)",
+            competition_date=today + timedelta(weeks=spec["weeks"]),
+            hours_per_week=9.0, trials_planned=24, minutes_per_trial=25,
+            teammates=len(spec["members"]) - 1,
+            last_activity_at=utcnow() - timedelta(days=1))
+        db.add(project)
+        db.flush()
+
+        project_service.add_revision(db, project, spec["question"], source="student",
+                                     rationale="The team's starting question.")
+        project_service.record_answers(db, project, [
+            InterviewAnswer(question_key=k, answer=v)
+            for k, v in _answers_for(
+                (None, None, None, None, spec["question"], None, None, None, None, None,
+                 0.9, None, None, None, spec["category"] == Category.BEHAVIORAL_SOCIAL)
+            ).items()
+        ])
+        project_service.evaluate(db, project)
+        project_service.regenerate_timeline(db, project, TimelineRequest(
+            competition_key="azsef",
+            competition_name="Arizona Science and Engineering Fair (AzSEF)",
+            competition_date=project.competition_date, hours_per_week=9.0,
+            trials_planned=24, minutes_per_trial=25, teammates=len(spec["members"]) - 1))
+
+        tasks = sorted(
+            db.query(TimelineTask).filter(TimelineTask.project_id == project.id).all(),
+            key=lambda t: (t.phase_index, t.id))
+        for task in tasks[: int(len(tasks) * STAGE_FRACTION[spec["stage"]])]:
+            task.status = TaskStatus.COMPLETE
+
+        for email, task_name, detail, hours, done in spec["contributions"]:
+            db.add(TeamContribution(
+                project_id=project.id, team_id=team.id, user_id=users[email].id,
+                task=task_name, description=detail, hours=hours, completed=done,
+                contribution_date=today - timedelta(days=random.randint(1, 30))))
+
+        db.add(NotebookEntry(
+            project_id=project.id, entry_date=today - timedelta(days=3),
+            what_was_done=f"Team working session: {spec['title']}.",
+            observations="Logged in the shared notebook — every member writes into the same one.",
+            next_steps="Split the next analysis block between members."))
+        db.flush()
+        project_status_service.refresh(db, project)
+        created.append(project)
+
+    # Individual projects in the same workspace, so the catalog has to render
+    # both ownership modes side by side.
+    for email, title, question, category, ptype, stage, weeks in [
+        ("daniel@example.edu", "Battery Degradation Analysis",
+         "How does repeated deep discharge affect usable capacity in 18650 cells over 60 cycles?",
+         Category.PHYSICS, ProjectType.SCIENTIFIC, Stage.DATA_ANALYSIS, 6),
+        ("priya@example.edu", "Monsoon Runoff Nitrate Study",
+         "How does ground cover type affect nitrate concentration in runoff after monsoon rainfall?",
+         Category.ENVIRONMENTAL, ProjectType.SCIENTIFIC, Stage.EXPERIMENTATION, 8),
+    ]:
+        project = Project(
+            owner_id=users[email].id, owner_team_id=None, workspace_id=basis.id,
+            mentor_id=users["andre@example.edu"].id,
+            visibility=ProjectVisibility.WORKSPACE, title=title, grade_level=11,
+            project_type=ptype, category=category, current_question=question, stage=stage,
+            competition_key="azsef",
+            competition_name="Arizona Science and Engineering Fair (AzSEF)",
+            competition_date=today + timedelta(weeks=weeks),
+            hours_per_week=6.0, trials_planned=18, minutes_per_trial=20,
+            last_activity_at=utcnow() - timedelta(days=2))
+        db.add(project)
+        db.flush()
+        project_service.add_revision(db, project, question, source="student")
+        project_service.record_answers(db, project, [
+            InterviewAnswer(question_key="goal", answer=question),
+            InterviewAnswer(question_key="independent_variable", answer="Four levels plus a control"),
+            InterviewAnswer(question_key="dependent_variable", answer="Primary outcome in mg/L"),
+            InterviewAnswer(question_key="control", answer="An untreated group run alongside"),
+            InterviewAnswer(question_key="trials", answer="6 replicates per condition"),
+        ])
+        project_service.evaluate(db, project)
+        project_status_service.refresh(db, project)
+        created.append(project)
+
+    # ---- outreach ---------------------------------------------------------- #
+    db.add(OutreachContact(
+        user_id=users["maya@example.edu"].id,
+        researcher_name="Dr. Elena Marsh", institution="Arizona State University",
+        their_work="your 2023 paper on thermal stress indices in reef imagery, particularly the "
+                   "point that visible bleaching lags measurable stress by several days",
+        template_key="paper_question",
+        subject="Question about your 2023 paper on reef thermal stress",
+        body="(draft in progress)", status=OutreachStatus.SENT,
+        sent_on=today - timedelta(days=12), follow_up_on=today - timedelta(days=2),
+        notes="Asked whether the lag held at the lowest stress level."))
+    db.add(OutreachContact(
+        user_id=users["arjun@example.edu"].id,
+        researcher_name="Dr. Samuel Okonkwo", institution="University of Arizona",
+        their_work="your lab's work on lightweight vision models for field deployment",
+        template_key="research_guidance", subject="Question about quantisation trade-offs",
+        body="(draft in progress)", status=OutreachStatus.REPLIED,
+        sent_on=today - timedelta(days=25),
+        notes="Replied with two papers and offered a 15-minute call."))
+
+    # ---- reference library ------------------------------------------------- #
+    # Ships with teaching examples only. No real past winners are fabricated;
+    # see backend/data/winning_projects.json.
+    winners_service.ingest_file(db)
+
     # ---- feedback and activity -------------------------------------------- #
     for idx, email, role, ctype, body in [
         (0, "mentor@example.edu", WorkspaceRole.MENTOR, CommentType.NEEDS_ACTION,
@@ -359,13 +601,18 @@ def run() -> None:
     db.commit()
 
     club_count = sum(1 for p in created if p.workspace_id == club.id)
+    team_count = sum(1 for p in created if p.owner_team_id is not None)
     print(
-        f"Seeded {len(users)} people across 4 workspaces "
-        f"({club_count} club projects, {len(created)} total). Password: {PASSWORD}\n"
+        f"Seeded {len(users)} people across 5 workspaces "
+        f"({club_count} club projects, {team_count} team projects, {len(created)} total). "
+        f"Password: {PASSWORD}\n"
         "  jordan@example.edu   student — LEAD of the club, OWNER of Robotics\n"
         "  mentor@example.edu   OWNER of the club, plain MEMBER of Robotics\n"
         "  priya@example.edu    strong project       ava@example.edu   weak project\n"
-        "  sarah@example.edu    blocked on approval  riley@example.edu another school"
+        "  sarah@example.edu    blocked on approval  riley@example.edu another school\n"
+        "  BASIS Phoenix Science Fair (BASIS-SF-27): Team Coral (CORAL-8K2P),\n"
+        "    Team Neuro (NEURO-4T7M), Team Aero (AERO-9P3K) + 2 individual projects.\n"
+        "    maya/arjun/sarah share ONE Coral project row."
     )
 
 

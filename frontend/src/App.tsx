@@ -26,6 +26,11 @@ import WorkspaceActivity from "./pages/WorkspaceActivity";
 import WorkspaceSettings from "./pages/WorkspaceSettings";
 import WorkspaceNew from "./pages/WorkspaceNew";
 import WorkspaceJoin from "./pages/WorkspaceJoin";
+import WorkspaceTeams from "./pages/WorkspaceTeams";
+import TeamDashboard from "./pages/TeamDashboard";
+import ResearchLibrary, { GuideDetailPage } from "./pages/ResearchLibrary";
+import WinningProjects, { WinningProjectDetail } from "./pages/WinningProjects";
+import ResearchOutreach from "./pages/ResearchOutreach";
 
 /** Signed-out visitors get the marketing site; everything else requires auth. */
 function PublicApp() {
@@ -71,10 +76,19 @@ export default function App() {
           <Route index element={<WorkspaceDashboard />} />
           <Route path="projects" element={<WorkspaceProjects />} />
           <Route path="projects/:projectId" element={<WorkspaceProjectDetail />} />
+          <Route path="teams" element={<WorkspaceTeams />} />
+          <Route path="teams/:teamId" element={<TeamDashboard />} />
           <Route path="members" element={<WorkspaceMembers />} />
           <Route path="activity" element={<WorkspaceActivity />} />
           <Route path="settings" element={<WorkspaceSettings />} />
         </Route>
+
+        {/* Reference material: not scoped to a workspace or a project. */}
+        <Route path="/library" element={<ResearchLibrary />} />
+        <Route path="/library/:guideId" element={<GuideDetailPage />} />
+        <Route path="/winning-projects" element={<WinningProjects />} />
+        <Route path="/winning-projects/:winnerId" element={<WinningProjectDetail />} />
+        <Route path="/outreach" element={<ResearchOutreach />} />
 
         <Route path="/projects/:projectId" element={<ProjectLayout />}>
           <Route index element={<ThisWeek />} />

@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: coach
+      POSTGRES_PASSWORD: coach
+      POSTGRES_DB: research_coach
+    ports:
+      - "5432:5432"
+    volumes:
+      - coach-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coach -d research_coach"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://coach:coach@db:5432/research_coach
+      SECRET_KEY: change-me-in-production
+      AI_PROVIDER: heuristic
+      CORS_ORIGINS: http://localhost:5173
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+
+volumes:
+  coach-data:

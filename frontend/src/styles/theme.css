@@ -2308,3 +2308,162 @@ textarea:focus {
     margin-bottom: var(--space-2);
   }
 }
+
+/* ------------------------------------------------------------------------ */
+/* Research Outreach: template library, tone, quality score                  */
+/* ------------------------------------------------------------------------ */
+
+.outreach-lib {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.outreach-lib__heading {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.outreach-lib__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.outreach-lib__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  text-align: left;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.outreach-lib__item:hover {
+  border-color: var(--rule-strong);
+}
+
+.outreach-lib__item.is-selected {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.outreach-lib__preview {
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--surface-sunk);
+  font-size: var(--text-sm);
+}
+
+.outreach-lib__preview h4 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.outreach-lib__detail {
+  margin: 0 0 var(--space-2);
+  line-height: var(--line-body);
+}
+
+.outreach-tones {
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.outreach-tones legend {
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.outreach-tones__option {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  font-size: var(--text-sm);
+}
+
+.outreach-draft {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.outreach-draft__body {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+  resize: vertical;
+}
+
+.outreach-score {
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--inert);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  font-size: var(--text-sm);
+}
+
+.outreach-score--ok {
+  border-left-color: var(--ok);
+}
+.outreach-score--warn {
+  border-left-color: var(--warn);
+}
+.outreach-score--flag {
+  border-left-color: var(--flag);
+}
+
+.outreach-score__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.outreach-score__number strong {
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.outreach-score__verdict {
+  margin: 0;
+  font-weight: var(--weight-medium);
+}
+
+.outreach-score h4 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}

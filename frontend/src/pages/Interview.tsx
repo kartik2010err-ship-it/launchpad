@@ -85,7 +85,7 @@ export default function Interview() {
       {completeness !== null && (
         <Card>
           <Gauge label="How much the engine knows about your project" value={completeness} suffix="%" />
-          <p className="faint" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+          <p className="faint mt-2 mb-0">
             Scores stay capped until this is high. An evaluation from thin information would be a guess dressed up as a
             number.
           </p>
@@ -93,7 +93,7 @@ export default function Interview() {
       )}
 
       {critiques.length > 0 && (
-        <div className="stack" style={{ gap: "0.6rem" }}>
+        <div className="stack gap-3">
           {critiques.map((critique) => (
             <Callout
               key={critique.question_key}
@@ -102,7 +102,7 @@ export default function Interview() {
             >
               <p>{critique.note}</p>
               {critique.follow_up && (
-                <p className="muted" style={{ marginBottom: 0 }}>
+                <p className="muted mb-0">
                   {critique.follow_up}
                 </p>
               )}

@@ -44,7 +44,7 @@ export default function TeamDashboard() {
   return (
     <div className="stack">
       <header className="page-head">
-        <div className="row" style={{ justifyContent: "space-between" }}>
+        <div className="row row--between">
           <div>
             <div className="faint">
               <Link to={`/workspaces/${wsId}/teams`}>Teams</Link>
@@ -52,7 +52,7 @@ export default function TeamDashboard() {
             <h1>{team.name}</h1>
             <p>{team.description ?? "A team sharing one research project."}</p>
           </div>
-          <div className="row" style={{ gap: "0.4rem" }}>
+          <div className="row gap-2">
             {project && <StatusPill status={project.status} />}
             <Pill tone={capacity.is_full ? "inert" : "neutral"}>
               {capacity.member_count}/{capacity.max_team_size} members
@@ -88,16 +88,16 @@ export default function TeamDashboard() {
           {members.length === 0 && <p className="muted">Nobody has joined yet.</p>}
         </div>
 
-        <div className="faint" style={{ marginTop: "0.8rem" }}>
+        <div className="faint mt-4">
           {team.mentor_name ? `Mentor: ${team.mentor_name}.` : "No mentor assigned yet."}{" "}
           {capacity.seats_left > 0
             ? `${capacity.seats_left} seat(s) left.`
             : "This team is at its configured maximum."}
         </div>
 
-        <details style={{ marginTop: "0.7rem" }}>
+        <details className="mt-3">
           <summary className="faint">How the team-size limit is set</summary>
-          <div style={{ marginTop: "0.5rem" }}>
+          <div className="mt-2">
             <p className="muted">
               Research Coach is configured to allow up to {capacity.max_team_size} members for{" "}
               {capacity.rules.competition_name}
@@ -128,13 +128,13 @@ export default function TeamDashboard() {
             .filter((task) => task.status !== "complete")
             .slice(0, 8)
             .map((task) => (
-              <div key={task.id} className="row" style={{ justifyContent: "space-between" }}>
+              <div key={task.id} className="row row--between">
                 <span>{task.title}</span>
                 <span className="faint">{formatDate(task.due_date)}</span>
               </div>
             ))}
           {data.tasks.length > 0 && (
-            <p className="faint" style={{ marginTop: "0.6rem" }}>
+            <p className="faint mt-3">
               {data.tasks.filter((t) => t.status === "complete").length} of {data.tasks.length}{" "}
               complete.
             </p>
@@ -144,7 +144,7 @@ export default function TeamDashboard() {
         <Card title="Mentor feedback">
           {data.comments.length === 0 && <p className="muted">No feedback yet.</p>}
           {data.comments.slice(0, 5).map((comment) => (
-            <div key={comment.id} style={{ marginBottom: "0.7rem" }}>
+            <div className="mb-3" key={comment.id}>
               <div className="row faint">
                 <strong>{comment.author_name}</strong>
                 <span>·</span>
@@ -162,7 +162,7 @@ export default function TeamDashboard() {
           <p className="faint">One notebook for the whole team — everyone writes into it.</p>
           {data.notebook.length === 0 && <p className="muted">No entries yet.</p>}
           {data.notebook.map((entry) => (
-            <div key={entry.id} style={{ marginBottom: "0.6rem" }}>
+            <div className="mb-3" key={entry.id}>
               <div className="faint">{formatDate(entry.entry_date)}</div>
               <div>{entry.what_was_done}</div>
               {entry.observations && <div className="faint">{entry.observations}</div>}
@@ -178,7 +178,7 @@ export default function TeamDashboard() {
         <Card title="Recent activity">
           {data.activity.length === 0 && <p className="muted">Nothing yet.</p>}
           {data.activity.slice(0, 8).map((entry) => (
-            <div key={entry.id} className="row" style={{ justifyContent: "space-between" }}>
+            <div key={entry.id} className="row row--between">
               <span>{entry.summary}</span>
               <span className="faint">{formatDate(entry.created_at)}</span>
             </div>
@@ -200,7 +200,7 @@ function SharedProject({ data, wsId }: { data: TeamDashboardData; wsId: number }
         </Link>
       }
     >
-      <div className="question-hero" style={{ marginBottom: "0.9rem" }}>
+      <div className="question-hero mb-4">
         <q>{project.current_question}</q>
       </div>
 
@@ -235,7 +235,7 @@ function SharedProject({ data, wsId }: { data: TeamDashboardData; wsId: number }
       </div>
 
       {project.next_task && (
-        <p style={{ marginTop: "0.7rem" }}>
+        <p className="mt-3">
           <strong>Next up:</strong> {project.next_task}
           {project.next_deadline && ` — due ${formatDate(project.next_deadline)}`}
         </p>
@@ -287,7 +287,7 @@ function StartProject({
       <p className="muted">
         A team owns exactly one project. Everyone who joins this team will open this same record.
       </p>
-      <form onSubmit={submit} style={{ marginTop: "0.8rem" }}>
+      <form className="mt-4" onSubmit={submit}>
         <label className="field">
           <span>Project title</span>
           <input
@@ -423,7 +423,7 @@ function Contributions({
       ))}
 
       {canLog && (
-        <form onSubmit={submit} style={{ marginTop: "1rem", borderTop: "1px solid var(--rule)", paddingTop: "0.9rem" }}>
+        <form className="divided-top" onSubmit={submit}>
           <div className="row" style={{ gap: "0.5rem", alignItems: "flex-end" }}>
             <label className="field" style={{ flex: "1 1 200px", marginBottom: 0 }}>
               <span>What you did</span>
@@ -457,7 +457,7 @@ function Contributions({
               Log
             </button>
           </div>
-          {error && <div style={{ marginTop: "0.6rem" }}><ErrorNote message={error} /></div>}
+          {error && <div className="mt-3"><ErrorNote message={error} /></div>}
         </form>
       )}
     </Card>

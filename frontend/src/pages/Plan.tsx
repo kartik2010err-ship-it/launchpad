@@ -63,7 +63,7 @@ export default function Plan() {
   return (
     <div className="stack">
       <header className="page-head">
-        <div className="row" style={{ justifyContent: "space-between" }}>
+        <div className="row row--between">
           <div>
             <h1>Research plan</h1>
             <p>
@@ -90,7 +90,7 @@ export default function Plan() {
       {data && (
         <>
           <Callout tone="warn" title="This is a planning aid, not a submission">
-            <p style={{ marginBottom: 0 }}>{String(data.content.disclaimer ?? "")}</p>
+            <p className="mb-0">{String(data.content.disclaimer ?? "")}</p>
           </Callout>
 
           <Card>

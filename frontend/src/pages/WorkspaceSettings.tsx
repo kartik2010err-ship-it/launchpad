@@ -93,22 +93,21 @@ export default function WorkspaceSettings() {
             Changing this affects new projects. Existing ones keep their own setting.
           </span>
         </label>
-        <label className="row" style={{ gap: "0.4rem" }}>
-          <input
+        <label className="row gap-2">
+          <input className="w-auto"
             type="checkbox"
             checked={Boolean(form.leads_can_assign_mentors)}
             onChange={(e) => setForm({ ...form, leads_can_assign_mentors: e.target.checked })}
-            style={{ width: "auto" }}
           />
           <span>Leads can assign mentors</span>
         </label>
       </Card>
 
       <Card title="Join code" sunk>
-        <p className="muted" style={{ marginBottom: "0.4rem" }}>
+        <p className="muted mb-2">
           Anyone with this code can join as a member.
         </p>
-        <code style={{ fontSize: "1.05rem" }}>{data.join_code}</code>
+        <code className="text-lg">{data.join_code}</code>
       </Card>
 
       <div className="row">

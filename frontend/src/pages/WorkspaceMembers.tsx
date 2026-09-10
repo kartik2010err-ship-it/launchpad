@@ -170,7 +170,7 @@ export default function WorkspaceMembers() {
 
       {isOwner && (
         <Card title="Invite someone">
-          <div className="filters" style={{ marginBottom: "0.7rem" }}>
+          <div className="filters mb-3">
             <input
               type="text"
               placeholder="Email (optional — leave blank for a shareable link)"
@@ -192,7 +192,7 @@ export default function WorkspaceMembers() {
               Create invitation
             </button>
           </div>
-          <p className="faint" style={{ marginBottom: "0.5rem" }}>
+          <p className="faint mb-2">
             {ROLE_HELP[invite.role]}
           </p>
           {detail.data?.join_code && (

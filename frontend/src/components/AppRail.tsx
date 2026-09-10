@@ -65,9 +65,8 @@ export default function AppRail({ projectId, subtitle, children }: Props) {
   return (
     <nav className="rail">
       <NavLink
-        to="/projects"
-        className="rail__brand"
-        style={{ textDecoration: "none", color: "inherit" }}
+        to="/home"
+        className="rail__brand plain-link"
       >
         Research Coach
         <span>{subtitle ?? (oversight ? "Workspace overview" : "Your research")}</span>
@@ -78,8 +77,8 @@ export default function AppRail({ projectId, subtitle, children }: Props) {
       {children}
 
       <Group heading="Research">
-        <Link to="/projects" label="Home" end />
-        <Link to="/projects" label="My projects" />
+        <Link to="/home" label="Home" end />
+        <Link to="/projects" label="My projects" end />
         {projectId ? (
           <Link to={`/projects/${projectId}/analysis`} label="Research Coach" />
         ) : (
@@ -133,8 +132,7 @@ export default function AppRail({ projectId, subtitle, children }: Props) {
       <div className="rail__foot">
         <div>{user?.name}</div>
         <button
-          className="btn btn--quiet btn--small"
-          style={{ marginTop: "0.4rem" }}
+          className="btn btn--quiet btn--small mt-2"
           onClick={() => {
             signOut();
             navigate("/");

@@ -315,6 +315,7 @@ export const api = {
     const qs = search.toString();
     return get<T.HistoricalSearchResult>(`/historical-projects${qs ? `?${qs}` : ""}`);
   },
+  homeDashboard: () => get<T.HomeDashboard>("/projects/home/dashboard"),
   historicalFacets: () => get<T.HistoricalFacets>("/historical-projects/facets"),
   historicalProject: (id: number) =>
     get<T.HistoricalProjectDetail>(`/historical-projects/${id}`),

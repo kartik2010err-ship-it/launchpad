@@ -1075,3 +1075,56 @@ export interface HistoricalImportReport {
   total: number;
   errors: string[];
 }
+
+/* --------------------------------------------------------- home dashboard -- */
+
+export interface NextActionItem {
+  action: string;
+  why: string;
+  guide_ids: string[];
+}
+
+export interface NextActionPlan {
+  primary: NextActionItem;
+  secondary: NextActionItem[];
+  source: string;
+}
+
+export interface HomeAttentionItem {
+  kind: "safety" | "overdue" | "blocked" | "outreach";
+  label: string;
+  detail: string;
+}
+
+export interface HomeUpcoming {
+  title: string;
+  due_date: string;
+  phase: string;
+  days_away: number;
+}
+
+export interface HomeProject {
+  id: number;
+  title: string;
+  question: string;
+  stage: string;
+  status: ProjectStatus;
+  readiness: number | null;
+  information_completeness: number | null;
+  competition: string | null;
+  competition_date: string | null;
+  is_team_project: boolean;
+  workspace_id: number;
+}
+
+export interface HomeDashboard {
+  has_project: boolean;
+  project: HomeProject | null;
+  next_action: NextActionPlan;
+  attention: HomeAttentionItem[];
+  upcoming: HomeUpcoming[];
+  suggested_guides: { guide_id: string; title: string; summary: string; read_minutes: number }[];
+  similar_historical_count: number;
+  other_projects: { id: number; title: string; stage: string; status: ProjectStatus }[];
+  follow_ups_due: number;
+}

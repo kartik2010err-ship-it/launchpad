@@ -60,7 +60,7 @@ function LayoutPreview({ layout, selected, onSelect }: { layout: PosterLayout; s
         ))}
       </div>
 
-      <p className="muted" style={{ marginBottom: 0 }}>
+      <p className="muted mb-0">
         {layout.why_it_fits}
       </p>
     </div>
@@ -115,7 +115,7 @@ export default function Poster() {
   return (
     <div className="stack">
       <header className="page-head">
-        <div className="row" style={{ justifyContent: "space-between" }}>
+        <div className="row row--between">
           <div>
             <h1>Poster</h1>
             <p>
@@ -143,7 +143,7 @@ export default function Poster() {
           }
         >
           <Gauge label="Draft quality" value={critique.score} basis={critique.basis} />
-          <div className="grid-2" style={{ marginTop: "0.9rem" }}>
+          <div className="grid-2 mt-4">
             {critique.main_problems.length > 0 && (
               <div>
                 <div className="faint">Main problems</div>
@@ -175,7 +175,7 @@ export default function Poster() {
               </div>
             )}
           </div>
-          <p className="faint" style={{ marginTop: "0.8rem", marginBottom: 0 }}>
+          <p className="faint mt-4 mb-0">
             {critique.disclaimer}
           </p>
         </Card>
@@ -223,7 +223,7 @@ export default function Poster() {
               placeholder="Draft this section here."
             />
 
-            <div className="grid-2" style={{ marginTop: "0.8rem" }}>
+            <div className="grid-2 mt-4">
               {section.should_add.length > 0 && (
                 <div>
                   <div className="faint">Should contain</div>
@@ -262,7 +262,7 @@ export default function Poster() {
       <h2>Figures</h2>
       {plan.data.figures.length === 0 ? (
         <Callout tone="note">
-          <p style={{ marginBottom: 0 }}>
+          <p className="mb-0">
             Figure suggestions appear once the engine knows what you are measuring. Answer the measurement questions in
             the interview.
           </p>
@@ -272,7 +272,7 @@ export default function Poster() {
           {[...plan.data.figures, ...plan.data.visual_assets].map((figure, i) => (
             <Card key={i} title={figure.name} aside={<Pill>{figure.kind}</Pill>}>
               <p className="muted">{figure.why}</p>
-              <p className="faint" style={{ marginBottom: 0 }}>
+              <p className="faint mb-0">
                 Place it: {figure.where_on_poster}
               </p>
             </Card>

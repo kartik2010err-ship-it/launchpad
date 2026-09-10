@@ -58,12 +58,12 @@ export default function SignIn() {
         </div>
 
         {mode === "up" && intent === "workspace" && (
-          <p className="faint" style={{ margin: 0 }}>
+          <p className="faint m-0">
             Create an account first, then set up your workspace on the next screen.
           </p>
         )}
         {mode === "up" && intent === "project" && (
-          <p className="faint" style={{ margin: 0 }}>
+          <p className="faint m-0">
             Create an account first, then start your project on the next screen.
           </p>
         )}
@@ -118,7 +118,7 @@ export default function SignIn() {
           {busy ? "Working…" : mode === "in" ? "Sign in" : "Create account"}
         </button>
 
-        <p className="faint" style={{ margin: 0 }}>
+        <p className="faint m-0">
           Demo accounts use the password <code>coach1234</code> — try <code>ava@example.edu</code> for a weak project,{" "}
           <code>priya@example.edu</code> for a strong one, or <code>mentor@example.edu</code> for the advisor view.
         </p>

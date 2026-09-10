@@ -69,7 +69,7 @@ export default function ResearchOutreach() {
               three.
             </p>
             {summary.data.follow_ups_due.map((row) => (
-              <div key={row.id} className="row" style={{ justifyContent: "space-between" }}>
+              <div key={row.id} className="row row--between">
                 <span>
                   <strong>{row.researcher_name}</strong>
                   {row.institution && <span className="faint"> · {row.institution}</span>}
@@ -156,7 +156,7 @@ function TrackerRow({ row, onChange }: { row: OutreachContact; onChange: () => v
           ))}
         </select>
       </div>
-      <div className="row" style={{ gap: "0.4rem" }}>
+      <div className="row gap-2">
         {row.follow_up_due && <Pill tone="warn">Follow up</Pill>}
         {!row.follow_up_due && row.follow_up_on && (
           <span className="faint">follow up {formatDate(row.follow_up_on)}</span>
@@ -284,7 +284,7 @@ function Builder({
         separate a message worth reading from spam.
       </p>
 
-      <form onSubmit={build} style={{ marginTop: "0.9rem" }}>
+      <form className="mt-4" onSubmit={build}>
         <label className="field">
           <span>What are you asking for?</span>
           <select value={templateKey} onChange={(e) => setTemplateKey(e.target.value)}>
@@ -438,7 +438,7 @@ function Builder({
         <div className="outreach-draft">
           <div className="card__title">
             <h3>Draft</h3>
-            <div className="row" style={{ gap: "var(--space-2)" }}>
+            <div className="row gap-2">
               <button className="btn btn--quiet btn--small" type="button" onClick={() => copy("subject", draft.subject)}>
                 {copied === "subject" ? "Copied" : "Copy subject"}
               </button>
@@ -464,7 +464,7 @@ function Builder({
             aria-label="Draft email"
           />
 
-          <div className="row" style={{ gap: "var(--space-2)", flexWrap: "wrap" }}>
+          <div className="row gap-2 row--wrap">
             <button className="btn btn--quiet btn--small" type="button" onClick={rescore} disabled={scoring}>
               {scoring ? "Checking…" : "Re-check quality"}
             </button>

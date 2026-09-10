@@ -192,7 +192,7 @@ export function Findings({
   improvements?: string[];
 }) {
   return (
-    <div className="stack" style={{ gap: "0.7rem" }}>
+    <div className="stack gap-3">
       {strengths && strengths.length > 0 && (
         <div>
           <div className="faint">Strengths</div>

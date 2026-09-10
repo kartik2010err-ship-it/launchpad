@@ -112,7 +112,7 @@ export default function WorkspaceProjects() {
       key: "stage",
       header: "Stage",
       sortValue: (r) => r.stage,
-      render: (r) => <span style={{ fontSize: "0.82rem" }}>{humanStage(r.stage)}</span>,
+      render: (r) => <span className="text-sm">{humanStage(r.stage)}</span>,
     },
     {
       key: "readiness",
@@ -140,7 +140,7 @@ export default function WorkspaceProjects() {
       sortValue: (r) => r.mentor_name ?? "zzz",
       render: (r) =>
         r.mentor_name ? (
-          <span style={{ fontSize: "0.82rem" }}>{r.mentor_name}</span>
+          <span className="text-sm">{r.mentor_name}</span>
         ) : (
           <span className="pill pill--warn">Unassigned</span>
         ),
@@ -152,7 +152,7 @@ export default function WorkspaceProjects() {
       render: (r) =>
         r.next_deadline ? (
           <>
-            <div className="num" style={{ fontSize: "0.8rem" }}>
+            <div className="num text-sm">
               {formatDate(r.next_deadline)}
             </div>
             <div className="dt__sub">{r.next_task}</div>

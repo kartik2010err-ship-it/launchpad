@@ -454,69 +454,25 @@ _GAP_TEXT: dict[str, str] = {
 
 
 def _next_step_reply(context: dict | None) -> AssistantReply:
-    if not context:
-        return AssistantReply(
-            reply=(
-                "Open this chat from inside a project and I can answer that from your actual "
-                "stage, scores and deadlines rather than guessing.\n\n"
-                "In general the order that works is: sharpen the question until it's "
-                "measurable, find the closest existing studies, then design the control."
-            ),
-            follow_ups=["What are you working on right now?"],
-            guide_ids=["idea-to-research-question"],
-        )
+    """Section 35. Delegates to the shared recommendation so the assistant and
+    the Home dashboard can never tell a student two different things."""
 
-    stage = context.get("stage", "")
-    lead, stage_guides = _STAGE_ADVICE.get(
-        stage, ("Here's where things stand.", ["choosing-a-topic"])
-    )
+    from app.services import next_action
 
-    derived = context.get("derived") or {}
-    gaps = [key for key, ok in derived.items() if key in _GAP_TEXT and not ok]
-    missing = context.get("missing") or []
-    deadline = context.get("next_deadline") or {}
-    evaluation = context.get("evaluation") or {}
+    plan = next_action.compute(context)
+    primary = plan["primary"]
 
-    lines = [lead, ""]
-
-    # One primary recommendation (section 35) — the first real gap wins.
-    if gaps:
-        primary_key = gaps[0]
-        lines.append(
-            f"**Do this first:** {_GAP_TEXT[primary_key]}. That's the single thing most "
-            "holding this project back right now — everything downstream gets easier once "
-            "it's settled."
-        )
-        guide_ids = _GAP_GUIDES[primary_key][:2]
-    elif missing:
-        lines.append(
-            f"**Do this first:** fill in {missing[0].lower()} in the interview. It's the "
-            "biggest hole in what the app knows about your project, which means the scores "
-            "you're seeing are less reliable than they look."
-        )
-        guide_ids = stage_guides[:2]
-    else:
-        lines.append(f"**Do this first:** {lead.rstrip('.')}. ")
-        guide_ids = stage_guides[:2]
-
-    secondary: list[str] = []
-    if len(gaps) > 1:
-        secondary.append(f"Then: {_GAP_TEXT[gaps[1]]}.")
-    if deadline.get("due_date"):
-        secondary.append(
-            f"Watch the calendar: \"{deadline.get('title')}\" is due {deadline['due_date']}."
-        )
-    weak = (evaluation.get("weak_criteria") or [])[:1]
-    if weak and not secondary:
-        item = weak[0]
-        secondary.append(
-            f"Also worth attention: {str(item.get('criterion', '')).replace('_', ' ')} "
-            f"scored {item.get('score')}/100."
-        )
-    if secondary:
+    lines = [f"**Do this first:** {primary['action']}.", "", primary["why"]]
+    if plan["secondary"]:
         lines.append("")
         lines.append("After that:")
-        lines.extend(f"- {s}" for s in secondary[:2])
+        lines.extend(f"- {item['action']}" for item in plan["secondary"])
+
+    guide_ids = list(primary.get("guide_ids") or [])
+    for item in plan["secondary"]:
+        for gid in item.get("guide_ids") or []:
+            if gid not in guide_ids:
+                guide_ids.append(gid)
 
     return AssistantReply(
         reply="\n".join(lines),
@@ -524,7 +480,7 @@ def _next_step_reply(context: dict | None) -> AssistantReply:
             "Why does that matter for my project?",
             "What would a judge ask me about this?",
         ],
-        guide_ids=guide_ids,
+        guide_ids=guide_ids[:3],
     )
 
 

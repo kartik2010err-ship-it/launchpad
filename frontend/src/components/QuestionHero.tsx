@@ -11,10 +11,10 @@ export default function QuestionHero({ project, showLineage = true }: { project:
   const current = revisions[0];
 
   return (
-    <div className="stack" style={{ gap: "1rem" }}>
+    <div className="stack gap-4">
       <div className="question-hero">
         <q>{project.current_question}</q>
-        <div className="row faint" style={{ marginTop: "0.5rem" }}>
+        <div className="row faint mt-2">
           <span>{humanise(project.stage)}</span>
           <span>·</span>
           <span>{humanise(project.category)}</span>
@@ -34,7 +34,7 @@ export default function QuestionHero({ project, showLineage = true }: { project:
           <summary className="faint" style={{ cursor: "pointer" }}>
             How this question changed ({revisions.length} versions)
           </summary>
-          <div className="lineage" style={{ marginTop: "0.9rem" }}>
+          <div className="lineage mt-4">
             {revisions.map((revision, index) => (
               <div key={revision.id} className={`lineage__item${index === 0 ? " is-current" : ""}`}>
                 <div className="lineage__version">
@@ -43,7 +43,7 @@ export default function QuestionHero({ project, showLineage = true }: { project:
                 <div className="lineage__text">{revision.text}</div>
                 {revision.rationale && <div className="faint">{revision.rationale}</div>}
                 {revision.improvements.length > 0 && (
-                  <ul className="tick-list tick-list--plus faint" style={{ marginTop: "0.3rem" }}>
+                  <ul className="tick-list tick-list--plus faint mt-1">
                     {revision.improvements.map((item, i) => (
                       <li key={i}>{item}</li>
                     ))}

@@ -53,7 +53,7 @@ export default function WorkspaceTeams() {
   return (
     <div className="stack">
       <header className="page-head">
-        <div className="row" style={{ justifyContent: "space-between" }}>
+        <div className="row row--between">
           <div>
             <h1>Teams</h1>
             <p>
@@ -73,7 +73,7 @@ export default function WorkspaceTeams() {
           <strong>{current?.name}</strong>; a team code puts you onto that team's existing
           project.
         </p>
-        <form className="row" onSubmit={join} style={{ gap: "0.5rem", marginTop: "0.6rem" }}>
+        <form className="row gap-2 mt-3" onSubmit={join}>
           <input
             className="input"
             style={{ maxWidth: "240px", fontFamily: "var(--mono)" }}
@@ -87,14 +87,14 @@ export default function WorkspaceTeams() {
           </button>
         </form>
         {joinError && (
-          <div style={{ marginTop: "0.7rem" }}>
+          <div className="mt-3">
             <Callout tone="flag">
               <p>{joinError}</p>
             </Callout>
           </div>
         )}
         {joined && (
-          <div style={{ marginTop: "0.7rem" }}>
+          <div className="mt-3">
             <Callout tone="note" title={`You are on ${joined}`}>
               <p>
                 You now share that team's project. Any change you make is a change everyone on
@@ -130,7 +130,7 @@ export default function WorkspaceTeams() {
       )}
 
       {mine.length > 0 && (
-        <section className="stack" style={{ gap: "0.75rem" }}>
+        <section className="stack gap-3">
           <div className="section-head">
             <h2>My teams</h2>
             <span className="faint">Teams you are actually on</span>
@@ -142,7 +142,7 @@ export default function WorkspaceTeams() {
       )}
 
       {others.length > 0 && (
-        <section className="stack" style={{ gap: "0.75rem" }}>
+        <section className="stack gap-3">
           <div className="section-head">
             <h2>All teams</h2>
             <span className="faint">
@@ -168,14 +168,13 @@ function TeamCard({
   team: import("../api/types").TeamSummary;
 }) {
   return (
-    <Link
+    <Link className="plain-link"
       to={`/workspaces/${wsId}/teams/${team.id}`}
-      style={{ textDecoration: "none", color: "inherit" }}
     >
       <Card
         title={team.name}
         aside={
-          <div className="row" style={{ gap: "0.4rem" }}>
+          <div className="row gap-2">
             {team.status && <StatusPill status={team.status} />}
             <Pill tone={team.seats_left === 0 ? "inert" : "neutral"}>
               {team.member_count}/{team.max_team_size}
@@ -188,8 +187,8 @@ function TeamCard({
         {team.description && <p className="muted">{team.description}</p>}
 
         {team.project_title ? (
-          <div className="question-hero" style={{ marginBottom: "0.7rem" }}>
-            <q style={{ fontSize: "1.02rem" }}>{team.project_title}</q>
+          <div className="question-hero mb-3">
+            <q className="text-base">{team.project_title}</q>
           </div>
         ) : (
           <p className="faint">No shared project started yet.</p>
@@ -218,7 +217,7 @@ function TeamCard({
         </div>
 
         {team.join_code && (
-          <div className="faint" style={{ marginTop: "0.5rem" }}>
+          <div className="faint mt-2">
             Team code <code className="code">{team.join_code}</code>
           </div>
         )}
@@ -300,7 +299,7 @@ function NewTeam({
           placeholder="Reef imagery and bleaching signatures"
         />
       </label>
-      <label className="row" style={{ gap: "0.5rem", marginTop: "0.3rem" }}>
+      <label className="row gap-2 mt-1">
         <input
           type="checkbox"
           checked={discoverable}
@@ -313,7 +312,7 @@ function NewTeam({
       </label>
 
       {oversight ? (
-        <label className="row" style={{ gap: "0.5rem", marginTop: "0.3rem" }}>
+        <label className="row gap-2 mt-1">
           <input
             type="checkbox"
             checked={joinAsMember}
@@ -325,13 +324,13 @@ function NewTeam({
           </span>
         </label>
       ) : (
-        <p className="faint" style={{ marginTop: "0.3rem" }}>
+        <p className="faint mt-1">
           You will be on this team, as its team lead.
         </p>
       )}
 
       {error && <ErrorNote message={error} />}
-      <div className="row" style={{ gap: "0.4rem", marginTop: "0.6rem" }}>
+      <div className="row gap-2 mt-3">
         <button className="btn btn--small" disabled={busy || name.trim().length < 2}>
           {busy ? "Creating…" : "Create"}
         </button>

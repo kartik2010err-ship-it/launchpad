@@ -66,7 +66,7 @@ export default function ResearchLibrary() {
           </p>
         </header>
 
-        <div className="row" style={{ gap: "0.5rem" }}>
+        <div className="row gap-2">
           <input
             className="input"
             style={{ maxWidth: "320px" }}
@@ -160,7 +160,7 @@ export function GuideDetailPage() {
                 Read both, then read why. The lesson is the change between them — copying the
                 stronger version teaches you nothing.
               </p>
-              <div className="compare" style={{ marginTop: "0.8rem" }}>
+              <div className="compare mt-4">
                 <div className="compare__side compare__side--weak">
                   <div className="compare__label">Weak</div>
                   <div>{comparison.weak}</div>
@@ -172,13 +172,13 @@ export function GuideDetailPage() {
               </div>
               <div className="compare__why">
                 <div className="compare__label">Why it is better</div>
-                <p style={{ margin: 0 }}>{comparison.why}</p>
+                <p className="m-0">{comparison.why}</p>
               </div>
             </Card>
           ))}
 
           {data.related.length > 0 && (
-            <section className="stack" style={{ gap: "0.75rem" }}>
+            <section className="stack gap-3">
               <h2>Read next</h2>
               <div className="guide-grid">
                 {data.related.map((guide) => (

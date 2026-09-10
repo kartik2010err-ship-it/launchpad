@@ -69,8 +69,8 @@ export default function Landing() {
                 <span className="mock-window__title">research-coach — readiness</span>
               </div>
               <div className="mock-window__body">
-                <div className="row" style={{ justifyContent: "space-between", marginBottom: "0.6rem" }}>
-                  <strong style={{ fontSize: "0.86rem" }}>Coral bleaching signatures</strong>
+                <div className="row row--between mb-3">
+                  <strong className="text-sm">Coral bleaching signatures</strong>
                   <StatusPill status="needs_attention" />
                 </div>
                 <Gauge label="Research question" value={71} animate={false} />
@@ -136,7 +136,7 @@ export default function Landing() {
         <div className="feature-split">
           <div>
             <span className="landing__kicker">For students</span>
-            <h2 style={{ marginBottom: "0.8rem" }}>
+            <h2 className="mb-4">
               A mentor that pushes back, on your own schedule.
             </h2>
             <p style={{ color: "var(--ink-soft)", maxWidth: "44ch" }}>
@@ -155,19 +155,19 @@ export default function Landing() {
           </div>
           <div className="feature-split__art">
             <div className="feature-art-card">
-              <div className="row" style={{ justifyContent: "space-between", marginBottom: "0.7rem" }}>
+              <div className="row row--between mb-3">
                 <span className="faint">Novelty check</span>
                 <Pill tone="warn">Incremental</Pill>
               </div>
-              <p style={{ fontSize: "0.9rem", marginBottom: "0.9rem" }}>
+              <p className="text-base mb-4">
                 This is a well-executed version of a common project type. A judge who
                 has seen this before will ask what makes your angle different.
               </p>
-              <div className="row" style={{ justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <div className="row row--between mb-2">
                 <span className="faint">Methodology</span>
               </div>
               <Meter percent={64} />
-              <div className="row" style={{ justifyContent: "space-between", marginTop: "0.7rem" }}>
+              <div className="row row--between mt-3">
                 <span className="faint">Feasibility</span>
               </div>
               <Meter percent={82} />
@@ -221,7 +221,7 @@ export default function Landing() {
           </div>
           <div>
             <span className="landing__kicker">For clubs, schools &amp; mentors</span>
-            <h2 style={{ marginBottom: "0.8rem" }}>
+            <h2 className="mb-4">
               One place to see every project in your club.
             </h2>
             <p style={{ color: "var(--ink-soft)", maxWidth: "44ch" }}>

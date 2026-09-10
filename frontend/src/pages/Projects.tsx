@@ -27,7 +27,7 @@ export default function Projects() {
       <main className="main">
         <div className="main__inner stack">
           <header className="page-head">
-            <div className="row" style={{ justifyContent: "space-between" }}>
+            <div className="row row--between">
               <div>
                 <h1>Your projects</h1>
                 <p>
@@ -59,22 +59,21 @@ export default function Projects() {
           )}
 
           {data?.map((project) => (
-            <Link
+            <Link className="plain-link"
               key={project.id}
               to={`/projects/${project.id}`}
-              style={{ textDecoration: "none", color: "inherit" }}
             >
               <Card
                 title={project.title}
                 aside={
-                  <div className="row" style={{ gap: "0.4rem" }}>
+                  <div className="row gap-2">
                     <StatusPill status={project.status} />
                     <Pill>{humanise(project.stage)}</Pill>
                   </div>
                 }
               >
-                <div className="question-hero" style={{ marginBottom: "0.7rem" }}>
-                  <q style={{ fontSize: "1.1rem" }}>{project.current_question}</q>
+                <div className="question-hero mb-3">
+                  <q className="text-lg">{project.current_question}</q>
                 </div>
                 <div className="row faint">
                   <span>{humanise(project.category)}</span>

@@ -61,7 +61,7 @@ export default function Analysis() {
   return (
     <div className="stack">
       <header className="page-head">
-        <div className="row" style={{ justifyContent: "space-between" }}>
+        <div className="row row--between">
           <div>
             <h1>Research readiness</h1>
             <p>Last evaluated {formatDate(result.created_at)}.</p>
@@ -78,7 +78,7 @@ export default function Analysis() {
             <span className="readout__number">{result.overall_score}</span>
             <span className="readout__denominator"> / 100</span>
             {delta !== null && delta !== 0 && (
-              <div className="faint num" style={{ marginTop: "0.3rem" }}>
+              <div className="faint num mt-1">
                 {delta > 0 ? "+" : ""}
                 {delta} since last time
               </div>
@@ -86,7 +86,7 @@ export default function Analysis() {
           </div>
           <p className="readout__caption">{scoreCaption(result.overall_score, result.information_completeness)}</p>
         </div>
-        <div style={{ marginTop: "1.2rem" }}>
+        <div className="mt-5">
           <Gauge
             label="Information the engine has to work with"
             value={result.information_completeness}
@@ -96,7 +96,7 @@ export default function Analysis() {
       </Card>
 
       <Card title="Mentor summary">
-        <p style={{ marginBottom: 0 }}>{result.mentor_summary}</p>
+        <p className="mb-0">{result.mentor_summary}</p>
       </Card>
 
       <CoachRecommendations projectId={project.id} />
@@ -105,7 +105,7 @@ export default function Analysis() {
         <Callout tone="flag" title="Rules and safety screening">
           <p>{result.safety.notice}</p>
           {result.safety.flags.map((flag) => (
-            <div key={flag.category} style={{ marginTop: "0.7rem" }}>
+            <div className="mt-3" key={flag.category}>
               <div>
                 <strong>{flag.label}</strong>{" "}
                 <span className="faint">triggered by: {flag.matched_terms.join(", ")}</span>
@@ -123,14 +123,14 @@ export default function Analysis() {
 
       {result.safety.flags.length === 0 && (
         <Callout tone="note" title="Rules and safety screening">
-          <p style={{ marginBottom: 0 }}>{result.safety.notice}</p>
+          <p className="mb-0">{result.safety.notice}</p>
         </Callout>
       )}
 
       <Card title="The five dimensions">
         <div className="stack">
           {result.dimensions.map((dimension) => (
-            <div key={dimension.key} style={{ borderTop: "1px solid var(--rule)", paddingTop: "0.9rem" }}>
+            <div className="divided-top" key={dimension.key}>
               <Gauge
                 label={
                   <span>

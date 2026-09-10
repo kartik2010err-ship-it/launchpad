@@ -2467,3 +2467,181 @@ textarea:focus {
   text-transform: uppercase;
   color: var(--ink-faint);
 }
+
+/* ------------------------------------------------------------------------ */
+/* Home dashboard                                                            */
+/*                                                                           */
+/* Exactly one element on this page is loud: the next action. Everything      */
+/* else is deliberately quieter than it, because a page where six things      */
+/* compete for attention answers none of the four questions it exists for.    */
+/* ------------------------------------------------------------------------ */
+
+.home__question {
+  margin: 0 0 var(--space-4);
+  font-family: var(--serif);
+  font-size: var(--text-lg);
+  line-height: var(--line-body);
+  color: var(--ink);
+}
+
+.home__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.home__stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.home__stat .faint {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.home__stat strong {
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.home__next {
+  padding: var(--space-6);
+  border: 1px solid var(--accent-line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.home__next-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.home__next h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  line-height: var(--line-tight);
+}
+
+.home__next p {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: var(--line-body);
+  max-width: 68ch;
+}
+
+.home__then {
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--accent-line);
+}
+
+.home__then .faint {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.home__attention,
+.home__upcoming,
+.home__others {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.home__attention li,
+.home__upcoming li {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+.home__days {
+  min-width: 2.6rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+.home__others li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Utilities                                                                 */
+/*                                                                           */
+/* A small, closed set. These exist so a component never has to reach for an */
+/* inline style to nudge one margin — which is how thirty screens end up      */
+/* with thirty different values for the same gap. Every value below comes     */
+/* from the token scale; nothing here introduces a new number.               */
+/* ------------------------------------------------------------------------ */
+
+.m-0 { margin: 0; }
+.mt-0 { margin-top: 0; }
+.mb-0 { margin-bottom: 0; }
+
+.mt-1 { margin-top: var(--space-1); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+.mt-5 { margin-top: var(--space-5); }
+.mt-6 { margin-top: var(--space-6); }
+.mt-7 { margin-top: var(--space-7); }
+
+.mb-1 { margin-bottom: var(--space-1); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-5 { margin-bottom: var(--space-5); }
+.mb-6 { margin-bottom: var(--space-6); }
+
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+.gap-5 { gap: var(--space-5); }
+.gap-6 { gap: var(--space-6); }
+
+/* The single most repeated layout in the app: a row with something pushed to
+   each end. */
+.row--between { justify-content: space-between; }
+.row--wrap { flex-wrap: wrap; }
+.row--baseline { align-items: baseline; }
+
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); }
+.text-lg { font-size: var(--text-lg); }
+.text-xl { font-size: var(--text-xl); }
+
+/* A link that wraps a card or a block: the block supplies the affordance, so
+   the link must not add underline or colour of its own. */
+.plain-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.divided-top {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+.w-auto { width: auto; }

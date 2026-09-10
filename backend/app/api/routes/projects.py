@@ -305,3 +305,15 @@ def resolve_comment(
     db.commit()
     db.refresh(comment)
     return comment
+
+
+@router.get("/home/dashboard", tags=["home"])
+def home_dashboard(
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    """Section 34. The four questions the logged-in home page has to answer."""
+
+    from app.services import home_service
+
+    return home_service.build(db, user)

@@ -59,27 +59,26 @@ export default function MentorThread({ projectId }: { projectId: number }) {
       ))}
 
       {user?.role === "mentor" && (
-        <div style={{ marginTop: "1rem", borderTop: "1px solid var(--rule)", paddingTop: "0.9rem" }}>
+        <div className="divided-top">
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Be specific about what to change and why."
             style={{ minHeight: "4rem" }}
           />
-          <div className="row" style={{ marginTop: "0.6rem" }}>
-            <select value={section} onChange={(e) => setSection(e.target.value)} style={{ width: "auto" }}>
+          <div className="row mt-3">
+            <select className="w-auto" value={section} onChange={(e) => setSection(e.target.value)}>
               {SECTIONS.map((value) => (
                 <option key={value} value={value}>
                   {humanise(value)}
                 </option>
               ))}
             </select>
-            <label className="row" style={{ gap: "0.3rem" }}>
-              <input
+            <label className="row gap-1">
+              <input className="w-auto"
                 type="checkbox"
                 checked={requiresAction}
                 onChange={(e) => setRequiresAction(e.target.checked)}
-                style={{ width: "auto" }}
               />
               <span className="faint">Needs a response</span>
             </label>

@@ -26,8 +26,7 @@ function ProjectCard({ project }: { project: HistoricalProjectCard }) {
   return (
     <Link
       to={`/isef/${project.id}`}
-      className="isef-card"
-      style={{ textDecoration: "none", color: "inherit" }}
+      className="isef-card plain-link"
     >
       <div className="isef-card__head">
         <h3>{project.title}</h3>
@@ -108,8 +107,7 @@ export default function IsefExplorer() {
           </Callout>
 
           <form
-            className="row"
-            style={{ gap: "var(--space-2)" }}
+            className="row gap-2"
             onSubmit={(event) => {
               event.preventDefault();
               setFilter("q", draft.trim() || null);
@@ -183,7 +181,7 @@ export default function IsefExplorer() {
                 <option value="false">Individual projects</option>
               </select>
 
-              <label className="row" style={{ gap: "var(--space-2)" }}>
+              <label className="row gap-2">
                 <input
                   type="checkbox"
                   checked={params.get("awarded") === "1"}
@@ -255,7 +253,7 @@ export default function IsefExplorer() {
               </div>
 
               {data.total > PAGE ? (
-                <div className="row" style={{ gap: "var(--space-2)" }}>
+                <div className="row gap-2">
                   <button
                     className="btn btn--quiet btn--small"
                     disabled={offset === 0}
@@ -324,7 +322,7 @@ export function IsefProjectDetail() {
 
               {/* Everything in this card came from the source, verbatim. */}
               <Card title="Source information">
-                <p className="faint" style={{ marginTop: 0 }}>
+                <p className="faint mt-0">
                   Published by the fair. Blank fields were not provided by the source and have
                   not been filled in.
                 </p>
@@ -368,11 +366,11 @@ export function IsefProjectDetail() {
 
               {data.derived_tags.length > 0 ? (
                 <Card sunk title="Research areas (inferred)">
-                  <p className="faint" style={{ marginTop: 0 }}>
+                  <p className="faint mt-0">
                     These tags were derived by this app from the title and abstract. They are
                     not the competition's official category.
                   </p>
-                  <div className="row" style={{ gap: "var(--space-2)", flexWrap: "wrap" }}>
+                  <div className="row gap-2 row--wrap">
                     {data.derived_tags.map((tag) => (
                       <Pill key={tag} tone="neutral">
                         {tag}
@@ -385,7 +383,7 @@ export function IsefProjectDetail() {
               {/* Deliberately a separate, quieter block from the record above. */}
               {data.ai_analysis ? (
                 <Card sunk title="AI educational breakdown">
-                  <p className="faint" style={{ marginTop: 0 }}>
+                  <p className="faint mt-0">
                     This section is this app's reading of the abstract, not information from
                     the fair. It cannot explain why any project placed — no judge commentary
                     exists in this catalogue.

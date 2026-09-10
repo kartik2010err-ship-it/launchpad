@@ -25,8 +25,8 @@ function VariantCard({
       title={variant.label}
       aside={<Pill tone={TONE[variant.variant] ?? "neutral"}>{variant.variant}</Pill>}
     >
-      <div className="question-hero" style={{ marginBottom: "0.9rem" }}>
-        <q style={{ fontSize: "1.1rem" }}>{variant.question}</q>
+      <div className="question-hero mb-4">
+        <q className="text-lg">{variant.question}</q>
       </div>
 
       <table className="table">
@@ -62,7 +62,7 @@ function VariantCard({
         </tbody>
       </table>
 
-      <div className="grid-2" style={{ marginTop: "0.9rem" }}>
+      <div className="grid-2 mt-4">
         <div>
           <div className="faint">What changed</div>
           <ul className="tick-list tick-list--plus">
@@ -81,7 +81,7 @@ function VariantCard({
         </div>
       </div>
 
-      <button className="btn" style={{ marginTop: "0.9rem" }} onClick={() => onSelect(variant)} disabled={busy}>
+      <button className="btn mt-4" onClick={() => onSelect(variant)} disabled={busy}>
         Adopt this as my question
       </button>
     </Card>
@@ -179,8 +179,7 @@ export default function Refine() {
             </p>
             <textarea value={custom} onChange={(e) => setCustom(e.target.value)} />
             <button
-              className="btn"
-              style={{ marginTop: "0.6rem" }}
+              className="btn mt-3"
               disabled={busy || custom.trim().length < 10}
               onClick={() => adopt({ text: custom.trim(), source: "student_edit" })}
             >

@@ -32,6 +32,8 @@ import ResearchLibrary, { GuideDetailPage } from "./pages/ResearchLibrary";
 import WinningProjects, { WinningProjectDetail } from "./pages/WinningProjects";
 import ResearchOutreach from "./pages/ResearchOutreach";
 import ResearchAssistant from "./pages/ResearchAssistant";
+import IsefExplorer, { IsefProjectDetail } from "./pages/IsefExplorer";
+import IsefImport from "./pages/IsefImport";
 
 /** Signed-out visitors get the marketing site; everything else requires auth. */
 function PublicApp() {
@@ -91,6 +93,9 @@ export default function App() {
         <Route path="/winning-projects/:winnerId" element={<WinningProjectDetail />} />
         <Route path="/outreach" element={<ResearchOutreach />} />
         <Route path="/assistant" element={<ResearchAssistant />} />
+        <Route path="/isef" element={<IsefExplorer />} />
+        <Route path="/isef/import" element={<IsefImport />} />
+        <Route path="/isef/:historicalId" element={<IsefProjectDetail />} />
 
         <Route path="/projects/:projectId" element={<ProjectLayout />}>
           <Route index element={<ThisWeek />} />

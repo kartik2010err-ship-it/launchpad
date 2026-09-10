@@ -107,6 +107,7 @@ export default function AppRail({ projectId, subtitle, children }: Props) {
       <Group heading="Learn">
         <Link to="/library" label="Research Library" />
         <Link to="/winning-projects" label="Winning Projects" />
+        <Link to="/isef" label="ISEF Project Explorer" />
       </Group>
 
       <Group heading="Prepare">

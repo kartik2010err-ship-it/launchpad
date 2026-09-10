@@ -930,3 +930,100 @@ export interface AssistantConversation {
   context: AssistantProjectContext | null;
   suggested_actions: AssistantSuggestedAction[];
 }
+
+/* ------------------------------------------------- ISEF project explorer -- */
+
+export interface HistoricalSourceInformation {
+  title: string;
+  year: number | null;
+  category: string | null;
+  subcategory: string | null;
+  project_type: string | null;
+  team_project: boolean | null;
+  abstract: string | null;
+  awards: string | null;
+  student_display: string | null;
+  school_display: string | null;
+  country: string | null;
+  state: string | null;
+  source: string;
+  source_url: string | null;
+  permission_note: string | null;
+}
+
+export interface HistoricalAIAnalysis {
+  research_question: string | null;
+  why_it_matters: string | null;
+  methodology: string | null;
+  scientific_depth: string | null;
+  novelty: string | null;
+  evidence: string | null;
+  lessons_for_students: string[];
+  model: string;
+  generated_at: string;
+}
+
+export interface HistoricalProjectCard {
+  id: number;
+  title: string;
+  year: number | null;
+  category: string | null;
+  team_project: boolean | null;
+  awards: string | null;
+  has_abstract: boolean;
+  source: string;
+  derived_tags: string[];
+}
+
+export interface HistoricalProjectDetail {
+  id: number;
+  source_information: HistoricalSourceInformation;
+  source_categories: string[];
+  derived_tags: string[];
+  ai_analysis: HistoricalAIAnalysis | null;
+  analysis_unavailable_reason: string | null;
+  copying_notice: string;
+}
+
+export interface HistoricalFacetValue {
+  value: string | number;
+  count: number;
+}
+
+export interface HistoricalFacets {
+  total: number;
+  awarded: number;
+  categories: HistoricalFacetValue[];
+  years: HistoricalFacetValue[];
+  sources: HistoricalFacetValue[];
+  derived_tags: HistoricalFacetValue[];
+}
+
+export interface HistoricalSearchResult {
+  results: HistoricalProjectCard[];
+  total: number;
+  limit: number;
+  offset: number;
+  copying_notice: string;
+}
+
+export interface HistoricalSimilarMatch {
+  project: HistoricalProjectCard;
+  score: number;
+  reasons: string[];
+}
+
+export interface HistoricalSimilarResult {
+  matches: HistoricalSimilarMatch[];
+  matched_on: string[];
+  empty_notice: string | null;
+  copying_notice: string;
+}
+
+export interface HistoricalImportReport {
+  created: number;
+  updated: number;
+  skipped: number;
+  total: number;
+  errors: string[];
+}

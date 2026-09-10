@@ -286,4 +286,24 @@ export const api = {
     get<T.AssistantProjectContext>(`/assistant/projects/${projectId}/context`),
   assistantSuggestedActions: () =>
     get<T.AssistantSuggestedAction[]>("/assistant/suggested-actions"),
+
+  /* --------------------------------------------------- ISEF explorer -- */
+
+  historicalProjects: (params: Record<string, string | number | boolean | undefined>) => {
+    const search = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "" && value !== false) search.set(key, String(value));
+    });
+    const qs = search.toString();
+    return get<T.HistoricalSearchResult>(`/historical-projects${qs ? `?${qs}` : ""}`);
+  },
+  historicalFacets: () => get<T.HistoricalFacets>("/historical-projects/facets"),
+  historicalProject: (id: number) =>
+    get<T.HistoricalProjectDetail>(`/historical-projects/${id}`),
+  similarHistoricalProjects: (projectId: number) =>
+    get<T.HistoricalSimilarResult>(`/historical-projects/for-project/${projectId}/similar`),
+  importHistoricalCsv: (payload: { csv_text: string; source: string; permission_note: string }) =>
+    post<T.HistoricalImportReport>("/historical-projects/import/csv", payload),
+  importHistoricalProject: (payload: Record<string, unknown>) =>
+    post<T.HistoricalImportReport>("/historical-projects/import/manual", payload),
 };

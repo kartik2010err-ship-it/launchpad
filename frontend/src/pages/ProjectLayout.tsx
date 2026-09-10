@@ -19,19 +19,45 @@ export function useProject(): ProjectContext {
   return value;
 }
 
-const SECTIONS: [string, string][] = [
-  ["", "This week"],
-  ["interview", "Interview"],
-  ["analysis", "Readiness"],
-  ["rubric", "AzSEF rubric"],
-  ["novelty", "Novelty check"],
-  ["refine", "Question rewrite"],
-  ["plan", "Research plan"],
-  ["timeline", "Timeline"],
-  ["poster", "Poster"],
-  ["judging", "Judge prep"],
-  ["notebook", "Notebook"],
-  ["assistant", "Ask the Assistant"],
+/**
+ * Section 2. Twelve links in one flat list is a menu, not a workspace — the
+ * student cannot tell what they have finished or what comes next. Grouped by
+ * the phase of the project each tool belongs to, the same twelve links answer
+ * "where am I" without anyone reading a label twice.
+ *
+ * Routes are unchanged. This is organisation, not a migration.
+ */
+const SECTION_GROUPS: { heading: string; links: [string, string][] }[] = [
+  {
+    heading: "Overview",
+    links: [
+      ["", "This week"],
+      ["assistant", "Ask the Assistant"],
+    ],
+  },
+  {
+    heading: "Research",
+    links: [
+      ["interview", "Interview"],
+      ["analysis", "Question evaluation"],
+      ["novelty", "Novelty check"],
+      ["refine", "Question rewrite"],
+      ["plan", "Research plan"],
+    ],
+  },
+  {
+    heading: "Experiment",
+    links: [["notebook", "Research notebook"]],
+  },
+  {
+    heading: "Competition",
+    links: [
+      ["timeline", "Timeline"],
+      ["rubric", "AzSEF rubric"],
+      ["poster", "Poster"],
+      ["judging", "Judge prep"],
+    ],
+  },
 ];
 
 export default function ProjectLayout() {
@@ -42,19 +68,35 @@ export default function ProjectLayout() {
   return (
     <div className="shell">
       <AppRail projectId={id} subtitle={project ? project.title : "Loading project"}>
-        <div className="rail__group">
-          <div className="rail__heading">Project</div>
-          {SECTIONS.map(([path, label]) => (
+        {SECTION_GROUPS.map((group) => (
+          <div className="rail__group" key={group.heading}>
+            <div className="rail__heading">{group.heading}</div>
+            {group.links.map(([path, label]) => (
+              <NavLink
+                key={path}
+                end={path === ""}
+                to={path ? `/projects/${id}/${path}` : `/projects/${id}`}
+                className={({ isActive }) => `rail__link${isActive ? " is-active" : ""}`}
+              >
+                {label}
+              </NavLink>
+            ))}
+          </div>
+        ))}
+
+        {/* A team project's roster and contribution log live on the team page,
+            which is workspace-scoped — linking out beats duplicating it here. */}
+        {project?.owner_team_id ? (
+          <div className="rail__group">
+            <div className="rail__heading">Team</div>
             <NavLink
-              key={path}
-              end={path === ""}
-              to={path ? `/projects/${id}/${path}` : `/projects/${id}`}
+              to={`/workspaces/${project.workspace_id}/teams/${project.owner_team_id}`}
               className={({ isActive }) => `rail__link${isActive ? " is-active" : ""}`}
             >
-              {label}
+              Members &amp; contributions
             </NavLink>
-          ))}
-        </div>
+          </div>
+        ) : null}
       </AppRail>
 
       <main className="main">

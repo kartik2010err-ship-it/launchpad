@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import (
     assistant,
+    historical,
     auth,
     library,
     outreach,
@@ -30,6 +31,7 @@ from app.models import team as _team_models  # noqa: F401
 from app.models import outreach as _outreach_models  # noqa: F401
 from app.models import library as _library_models  # noqa: F401
 from app.models import assistant as _assistant_models  # noqa: F401
+from app.models import historical as _historical_models  # noqa: F401
 
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
@@ -60,6 +62,7 @@ app.include_router(teams.router)
 app.include_router(library.router)
 app.include_router(outreach.router)
 app.include_router(assistant.router)
+app.include_router(historical.router)
 
 
 @app.on_event("startup")

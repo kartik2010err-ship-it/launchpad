@@ -822,9 +822,53 @@ export type OutreachStatus =
 export interface OutreachTemplate {
   key: string;
   name: string;
+  category: string;
+  category_label: string;
   when_to_use: string;
+  avoid_when: string;
   structure: { section: string; guidance: string }[];
   ask_examples: string[];
+  required_personalisation: string[];
+  example_subjects: string[];
+  why_it_works: string;
+  common_mistakes: string[];
+  register: string;
+}
+
+export interface OutreachTone {
+  key: string;
+  name: string;
+  description: string;
+}
+
+export interface OutreachPersonalisation {
+  verdict: "too_short" | "generic" | "unclear" | "specific";
+  is_specific: boolean;
+  message: string;
+  word_count: number;
+}
+
+export interface OutreachQuality {
+  score: number;
+  verdict: string;
+  strengths: string[];
+  improvements: string[];
+  word_count: number;
+  personalisation: OutreachPersonalisation;
+}
+
+export interface OutreachPrefill {
+  project_id: number;
+  project_title: string;
+  research_topic: string | null;
+  research_question: string | null;
+  category: string;
+  competition: string | null;
+  timeline: string | null;
+  methodology_summary: string | null;
+  student_name: string;
+  school: string | null;
+  grade_level: number | null;
 }
 
 export interface OutreachDraft {
@@ -833,6 +877,10 @@ export interface OutreachDraft {
   body: string;
   sections: { section: string; content: string }[];
   word_count: number;
+  tone: string;
+  tones: OutreachTone[];
+  quality: OutreachQuality;
+  sources_note: string;
   spam_warning: string;
   etiquette: string[];
   before_you_send: string[];

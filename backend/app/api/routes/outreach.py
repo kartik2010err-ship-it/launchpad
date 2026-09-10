@@ -20,9 +20,22 @@ from app.db.session import get_db
 from app.models.enums import OUTREACH_STATUS_LABELS, OutreachStatus
 from app.models.outreach import OutreachContact
 from app.models.project import Project, User
-from app.services import outreach_service, workspace_service
+from app.services import outreach_service, project_service, workspace_service
 
 router = APIRouter(prefix="/outreach", tags=["outreach"])
+
+
+class ScoreRequest(BaseModel):
+    """Re-score a draft the student edited by hand."""
+
+    subject: str = ""
+    body: str
+    their_work: str | None = None
+    specific_request: str | None = None
+
+
+class PersonalisationRequest(BaseModel):
+    their_work: str = ""
 
 
 class DraftRequest(BaseModel):
@@ -36,6 +49,7 @@ class DraftRequest(BaseModel):
     school: str | None = None
     grade_level: int | None = None
     original_subject: str | None = None
+    tone: str = "standard"
 
 
 class ContactCreate(BaseModel):
@@ -127,9 +141,76 @@ def _owned_or_404(db: Session, contact_id: int, user: User) -> OutreachContact:
 def templates(_: User = Depends(current_user)):
     return {
         "templates": outreach_service.listing(),
+        "categories": [
+            {"key": key, "label": label} for key, label in outreach_service.CATEGORIES
+        ],
+        "tones": outreach_service.TONES,
         "spam_warning": outreach_service.SPAM_WARNING,
         "etiquette": outreach_service.ETIQUETTE,
+        "sources": outreach_service.SOURCES,
+        "sources_note": outreach_service.SOURCES_NOTE,
     }
+
+
+@router.get("/prefill/{project_id}")
+def prefill_from_project(
+    project_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    """Section 43. The app already knows the project; do not ask again."""
+
+    project = db.get(Project, project_id)
+    if project is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found.")
+    membership = workspace_service.membership_for(db, project.workspace_id, user.id)
+    if membership is None or not workspace_service.can_view_project(db, project, membership):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found.")
+
+    signals = project_service.signals_for(project)
+    method_bits = [
+        signals.get(key)
+        for key in ("independent_variable", "dependent_variable", "measurement", "test_method")
+        if signals.has(key)
+    ]
+    return {
+        "project_id": project.id,
+        "project_title": project.title,
+        "research_topic": project.topic or project.title,
+        "research_question": project.current_question,
+        "category": str(project.category),
+        "competition": project.competition_name,
+        "timeline": (
+            f"the {project.competition_name} deadline on {project.competition_date.isoformat()}"
+            if project.competition_name and project.competition_date
+            else None
+        ),
+        "methodology_summary": "; ".join(method_bits) or None,
+        "student_name": user.name,
+        "school": user.school,
+        "grade_level": user.grade_level,
+    }
+
+
+@router.post("/personalisation-check")
+def personalisation_check(
+    payload: PersonalisationRequest, _: User = Depends(current_user)
+):
+    """Section 36. Called before generating, so a weak answer is caught early."""
+
+    return outreach_service.assess_personalisation(payload.their_work)
+
+
+@router.post("/score")
+def score(payload: ScoreRequest, _: User = Depends(current_user)):
+    """Section 37. Re-score after the student edits the draft themselves."""
+
+    return outreach_service.score_draft(
+        body=payload.body,
+        subject=payload.subject,
+        their_work=payload.their_work,
+        specific_request=payload.specific_request,
+    )
 
 
 @router.post("/draft")
@@ -156,6 +237,7 @@ def build_draft(
             specific_request=payload.specific_request,
             timeline=payload.timeline,
             original_subject=payload.original_subject,
+            tone=payload.tone,
         )
     except outreach_service.DraftError as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc

@@ -250,9 +250,27 @@ export const api = {
   /* ------------------------------------------------------------ outreach -- */
 
   outreachTemplates: () =>
-    get<{ templates: T.OutreachTemplate[]; spam_warning: string; etiquette: string[] }>(
-      "/outreach/templates",
-    ),
+    get<{
+      templates: T.OutreachTemplate[];
+      categories: { key: string; label: string }[];
+      tones: T.OutreachTone[];
+      spam_warning: string;
+      etiquette: string[];
+      sources: { name: string; url: string }[];
+      sources_note: string;
+    }>("/outreach/templates"),
+  outreachPrefill: (projectId: number) =>
+    get<T.OutreachPrefill>(`/outreach/prefill/${projectId}`),
+  checkOutreachPersonalisation: (theirWork: string) =>
+    post<T.OutreachPersonalisation>("/outreach/personalisation-check", {
+      their_work: theirWork,
+    }),
+  scoreOutreachDraft: (payload: {
+    subject: string;
+    body: string;
+    their_work?: string;
+    specific_request?: string;
+  }) => post<T.OutreachQuality>("/outreach/score", payload),
   buildOutreachDraft: (payload: Record<string, unknown>) =>
     post<T.OutreachDraft>("/outreach/draft", payload),
   outreachContacts: () => get<T.OutreachContact[]>("/outreach/contacts"),

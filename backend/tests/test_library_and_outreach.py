@@ -267,29 +267,55 @@ def test_similar_projects_carry_the_do_not_copy_warning(client):
 # --------------------------------------------------------------------------- #
 
 
-def test_all_six_templates_are_offered(client):
+def test_every_outreach_situation_has_its_own_template(client):
+    """Section 32. One generic professor email is the thing this library exists
+    to replace, so each distinct situation gets its own template."""
+
     response = client.get("/outreach/templates", headers=auth(client, "maya@example.edu"))
     assert response.status_code == 200
     body = response.json()
     keys = {t["key"] for t in body["templates"]}
-    assert keys == {
+
+    assert {
         "research_guidance",
         "mentorship",
+        "lab_experience",
         "paper_question",
-        "equipment_access",
         "short_meeting",
+        "equipment_access",
+        "dataset_request",
+        "methodology_feedback",
+        "grad_student",
         "follow_up",
-    }
+        "thank_you",
+        "second_meeting",
+        "results_feedback",
+        "poster_feedback",
+        "interdisciplinary",
+    } <= keys
     assert body["spam_warning"]
+
+    # Every template carries the preview a student reads before choosing.
     for template in body["templates"]:
-        sections = [s["section"] for s in template["structure"]]
-        assert sections == [
-            "Introduction",
-            "Connection",
-            "Project",
-            "Specific request",
-            "Closing",
-        ]
+        assert template["structure"], template["key"]
+        assert template["when_to_use"], template["key"]
+        assert template["required_personalisation"], template["key"]
+        assert template["example_subjects"], template["key"]
+        assert template["why_it_works"], template["key"]
+        assert template["common_mistakes"], template["key"]
+        assert template["category"] in {c["key"] for c in body["categories"]}
+
+
+def test_templates_are_grouped_and_credit_their_sources(client):
+    """Section 39 grouping, section 45 attribution."""
+
+    body = client.get(
+        "/outreach/templates", headers=auth(client, "maya@example.edu")
+    ).json()
+    assert len(body["categories"]) >= 6
+    assert body["sources"], "template design should credit the guidance it came from"
+    assert all(row["url"].startswith("https://") for row in body["sources"])
+    assert "best practices" in body["sources_note"].lower()
 
 
 def test_draft_builder_refuses_a_generic_email(client):

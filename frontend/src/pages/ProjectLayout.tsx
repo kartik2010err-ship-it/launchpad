@@ -31,6 +31,7 @@ const SECTIONS: [string, string][] = [
   ["poster", "Poster"],
   ["judging", "Judge prep"],
   ["notebook", "Notebook"],
+  ["assistant", "Ask the Assistant"],
 ];
 
 export default function ProjectLayout() {

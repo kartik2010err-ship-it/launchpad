@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 
 from app.db.session import SessionLocal
 from app.main import app
-from app.models.project import Project
+from app.models.project import Project, User
 from app.models.team import Team, TeamMembership
 from app.models.workspace_org import Workspace
 from app.seed import run as seed_run
@@ -412,14 +412,114 @@ def test_team_rules_are_presented_as_configuration_not_compliance(client):
 # --------------------------------------------------------------------------- #
 
 
-def test_students_cannot_create_teams(client):
+def test_a_member_can_form_their_own_team_and_is_on_it(client):
+    """Section 5. A student organising themselves is the normal case, not an
+    administrative exception — and creating a team you are not a member of would
+    be organising somebody else's work from outside it."""
+
     ws = workspace_id(BASIS)
     response = client.post(
         f"/workspaces/{ws}/teams",
         json={"name": "Team Rogue"},
         headers=auth(client, "maya@example.edu"),
     )
-    assert response.status_code == 403
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["i_am_member"] is True
+    assert "Maya Patel" in body["member_names"]
+
+
+def test_a_member_cannot_create_a_team_they_stay_off(client):
+    """Even asking explicitly. The flag is honoured only for oversight."""
+
+    ws = workspace_id(BASIS)
+    response = client.post(
+        f"/workspaces/{ws}/teams",
+        json={"name": "Team Absent", "join_as_member": False},
+        headers=auth(client, "maya@example.edu"),
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["i_am_member"] is True
+
+
+def test_a_workspace_can_turn_member_team_creation_off(client):
+    ws = workspace_id(BASIS)
+    owner = auth(client, "priyanka@example.edu")
+    assert client.patch(
+        f"/workspaces/{ws}", json={"members_can_create_teams": False}, headers=owner
+    ).status_code == 200
+
+    blocked = client.post(
+        f"/workspaces/{ws}/teams",
+        json={"name": "Team Blocked"},
+        headers=auth(client, "arjun@example.edu"),
+    )
+    assert blocked.status_code == 403
+
+    # Oversight is unaffected by the setting.
+    assert client.post(
+        f"/workspaces/{ws}/teams", json={"name": "Team Allowed"}, headers=owner
+    ).status_code == 201
+
+    client.patch(f"/workspaces/{ws}", json={"members_can_create_teams": True}, headers=owner)
+
+
+def test_the_owner_can_create_a_normal_team_for_themselves(client):
+    """Section 5. No hidden "owner team" concept — the owner joins a team the
+    same way a student does, and it is an ordinary team row."""
+
+    ws = workspace_id(BASIS)
+    owner = auth(client, "priyanka@example.edu")
+    response = client.post(
+        f"/workspaces/{ws}/teams",
+        json={"name": "Team Priyanka", "join_as_member": True},
+        headers=owner,
+    )
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["i_am_member"] is True
+    assert body["join_code"]  # an ordinary team, with an ordinary code
+
+
+def test_owner_is_not_a_member_of_teams_they_merely_oversee(client):
+    """Section 4, the load-bearing distinction. Priyanka owns the BASIS
+    workspace and can inspect Team Coral — she is not on it, and must never be
+    displayed as though she were."""
+
+    ws = workspace_id(BASIS)
+    owner = auth(client, "priyanka@example.edu")
+
+    listing = client.get(f"/workspaces/{ws}/teams", headers=owner)
+    assert listing.status_code == 200
+    coral = next(t for t in listing.json() if t["name"] == "Team Coral")
+
+    assert coral["i_am_member"] is False
+
+    # The roster is exactly the three students, and the owner is not on it.
+    with _db() as db:
+        owner_name = db.query(User).filter(User.email == "priyanka@example.edu").one().name
+    assert owner_name not in coral["member_names"]
+    assert len(coral["member_names"]) == 3
+    assert coral["member_count"] == 3
+
+    # Oversight still reaches the team's project without a TeamMembership.
+    assert client.get(f"/projects/{coral['project_id']}", headers=owner).status_code == 200
+
+
+def test_my_teams_and_all_teams_differ_for_an_owner(client):
+    """Section 9. "My teams" means joined, for everyone. The owner's own list is
+    a strict subset of what they can oversee."""
+
+    ws = workspace_id(BASIS)
+    owner = auth(client, "priyanka@example.edu")
+    rows = client.get(f"/workspaces/{ws}/teams", headers=owner).json()
+
+    mine = {t["name"] for t in rows if t["i_am_member"]}
+    everything = {t["name"] for t in rows}
+
+    assert "Team Coral" in everything
+    assert "Team Coral" not in mine
+    assert mine < everything
 
 
 def test_leads_can_create_and_archive_teams(client):

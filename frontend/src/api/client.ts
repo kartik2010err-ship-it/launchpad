@@ -263,4 +263,27 @@ export const api = {
   deleteOutreachContact: (id: number) =>
     request<void>(`/outreach/contacts/${id}`, { method: "DELETE" }),
   outreachSummary: () => get<T.OutreachSummary>("/outreach/summary"),
+
+  /* --------------------------------------------------- research assistant -- */
+
+  assistantConversations: (projectId?: number) =>
+    get<T.AssistantConversationSummary[]>(
+      `/assistant/conversations${projectId ? `?project_id=${projectId}` : ""}`,
+    ),
+  startAssistantConversation: (projectId?: number | null) =>
+    post<T.AssistantConversation>("/assistant/conversations", { project_id: projectId ?? null }),
+  assistantConversation: (id: number) =>
+    get<T.AssistantConversation>(`/assistant/conversations/${id}`),
+  sendAssistantMessage: (id: number, content: string) =>
+    post<T.AssistantMessage>(`/assistant/conversations/${id}/messages`, { content }),
+  shareAssistantConversation: (id: number, shared: boolean) =>
+    patch<T.AssistantConversation>(`/assistant/conversations/${id}/share`, {
+      shared_with_team: shared,
+    }),
+  deleteAssistantConversation: (id: number) =>
+    request<void>(`/assistant/conversations/${id}`, { method: "DELETE" }),
+  assistantProjectContext: (projectId: number) =>
+    get<T.AssistantProjectContext>(`/assistant/projects/${projectId}/context`),
+  assistantSuggestedActions: () =>
+    get<T.AssistantSuggestedAction[]>("/assistant/suggested-actions"),
 };

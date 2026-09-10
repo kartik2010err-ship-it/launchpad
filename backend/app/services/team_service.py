@@ -167,9 +167,26 @@ def _guard_capacity(db: Session, team: Team) -> None:
 
 
 def can_manage_teams(membership) -> bool:
-    """Creating, archiving, assigning mentors: workspace owners and leads."""
+    """Archiving, assigning mentors, editing another team: owners and leads."""
 
     return workspace_service.is_oversight(membership)
+
+
+def can_create_teams(workspace: Workspace, membership) -> bool:
+    """Section 5: ordinary members may form their own team when the workspace
+    allows it.
+
+    Oversight can always create one — including, deliberately, a normal team for
+    themselves. A workspace owner who wants to enter their own project joins a
+    team like anybody else; there is no special owner-team concept, because one
+    would be a second code path for exactly the thing teams already do.
+    """
+
+    if membership is None or membership.workspace_id != workspace.id:
+        return False
+    if workspace_service.is_oversight(membership):
+        return True
+    return bool(getattr(workspace, "members_can_create_teams", True))
 
 
 def can_edit_team_settings(db: Session, team: Team, membership) -> bool:
@@ -220,6 +237,7 @@ def create_team(
     competition_key: str | None = None,
     max_members_override: int | None = None,
     is_discoverable: bool = True,
+    join_as_member: bool = False,
 ) -> Team:
     name = name.strip()
     if not name:
@@ -247,6 +265,13 @@ def create_team(
     )
     db.add(team)
     db.flush()
+
+    # Section 5. Creating a team you are not on is an administrative act (a coach
+    # setting up the season), so it stays opt-in rather than implied — but when a
+    # student forms their own team, not joining it would be absurd.
+    if join_as_member:
+        add_team_member(db, team, creator, role=TeamRole.TEAM_LEAD)
+
     return team
 
 

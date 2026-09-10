@@ -31,6 +31,7 @@ import TeamDashboard from "./pages/TeamDashboard";
 import ResearchLibrary, { GuideDetailPage } from "./pages/ResearchLibrary";
 import WinningProjects, { WinningProjectDetail } from "./pages/WinningProjects";
 import ResearchOutreach from "./pages/ResearchOutreach";
+import ResearchAssistant from "./pages/ResearchAssistant";
 
 /** Signed-out visitors get the marketing site; everything else requires auth. */
 function PublicApp() {
@@ -89,6 +90,7 @@ export default function App() {
         <Route path="/winning-projects" element={<WinningProjects />} />
         <Route path="/winning-projects/:winnerId" element={<WinningProjectDetail />} />
         <Route path="/outreach" element={<ResearchOutreach />} />
+        <Route path="/assistant" element={<ResearchAssistant />} />
 
         <Route path="/projects/:projectId" element={<ProjectLayout />}>
           <Route index element={<ThisWeek />} />
@@ -102,6 +104,7 @@ export default function App() {
           <Route path="poster" element={<Poster />} />
           <Route path="judging" element={<JudgePrep />} />
           <Route path="notebook" element={<Notebook />} />
+          <Route path="assistant" element={<ResearchAssistant />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/projects" replace />} />

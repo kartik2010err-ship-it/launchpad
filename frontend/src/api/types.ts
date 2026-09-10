@@ -426,6 +426,7 @@ export interface WorkspaceDetail extends WorkspaceSummary {
   join_code: string | null;
   default_project_visibility: ProjectVisibility;
   leads_can_assign_mentors: boolean;
+  members_can_create_teams: boolean;
   created_at: string;
 }
 
@@ -633,6 +634,7 @@ export interface TeamSummary {
   status: ProjectStatus | null;
   next_deadline: string | null;
   i_am_member: boolean;
+  i_can_edit: boolean;
   created_at: string;
 }
 
@@ -860,4 +862,71 @@ export interface OutreachSummary {
   by_status: { status: OutreachStatus; label: string; count: number }[];
   follow_ups_due: OutreachContact[];
   spam_warning: string;
+}
+
+/* ------------------------------------------------- research assistant -- */
+
+export interface AssistantGuideRef {
+  guide_id: string;
+  title: string;
+  category: string;
+  summary: string;
+  read_minutes: number;
+}
+
+export interface AssistantMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  follow_ups: string[];
+  provider: string | null;
+  created_at: string;
+  guides: AssistantGuideRef[];
+}
+
+export interface AssistantProjectContext {
+  project_id: number;
+  title: string;
+  question: string;
+  project_type: string;
+  category: string;
+  grade_level: number;
+  stage: string;
+  competition: string | null;
+  readiness: number | null;
+  answered_count: number;
+  total_questions: number;
+  known_fields: string[];
+  missing_fields: string[];
+  safety_flags: string[];
+  next_deadline: string | null;
+}
+
+export interface AssistantSuggestedAction {
+  key: string;
+  label: string;
+  prompt: string;
+}
+
+export interface AssistantConversationSummary {
+  id: number;
+  title: string;
+  project_id: number | null;
+  project_title: string | null;
+  shared_with_team: boolean;
+  message_count: number;
+  last_message_preview: string | null;
+  updated_at: string;
+}
+
+export interface AssistantConversation {
+  id: number;
+  title: string;
+  project_id: number | null;
+  shared_with_team: boolean;
+  created_at: string;
+  updated_at: string;
+  messages: AssistantMessage[];
+  context: AssistantProjectContext | null;
+  suggested_actions: AssistantSuggestedAction[];
 }

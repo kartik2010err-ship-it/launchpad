@@ -104,6 +104,7 @@ def _summary(db: Session, team: Team, membership: WorkspaceMembership) -> dict:
         "status": str(row.status) if row else None,
         "next_deadline": row.next_deadline if row else None,
         "i_am_member": team_service.is_team_member(db, team.id, membership.user_id),
+        "i_can_edit": team_service.can_edit_team_settings(db, team, membership),
         "created_at": team.created_at,
     }
 
@@ -166,9 +167,23 @@ def create_team(
     payload: TeamCreate,
     db: Session = Depends(get_db),
     workspace: Workspace = Depends(get_workspace),
-    membership: WorkspaceMembership = Depends(require_oversight),
+    membership: WorkspaceMembership = Depends(get_membership),
     actor: User = Depends(current_user),
 ):
+    if not team_service.can_create_teams(workspace, membership):
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "This workspace only lets owners and leads create teams.",
+        )
+
+    # A member who is not overseeing the workspace cannot create a team they are
+    # not on: that would be organising other people's work from outside it.
+    join_as_member = (
+        payload.join_as_member
+        if workspace_service.is_oversight(membership)
+        else True
+    )
+
     try:
         team = team_service.create_team(
             db,
@@ -180,6 +195,7 @@ def create_team(
             competition_key=payload.competition_key,
             max_members_override=payload.max_members_override,
             is_discoverable=payload.is_discoverable,
+            join_as_member=join_as_member,
         )
     except ValueError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc

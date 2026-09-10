@@ -1944,3 +1944,244 @@ textarea:focus {
   border-radius: var(--radius);
   padding: 0.9rem 1rem;
 }
+
+/* ------------------------------------------------------------------------ */
+/* Research Assistant                                                        */
+/*                                                                           */
+/* Two columns: a quiet list of past threads, and the conversation. Nothing   */
+/* here introduces a colour — every value is a token, so the assistant reads  */
+/* as the same product as the workspace and the library.                     */
+/* ------------------------------------------------------------------------ */
+
+.assistant {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 1.6rem;
+  align-items: start;
+}
+
+.assistant__rail {
+  position: sticky;
+  top: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-right: 1.2rem;
+  border-right: 1px solid var(--rule);
+  min-height: 60vh;
+}
+
+.assistant__privacy {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+
+.assistant__list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.assistant__list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.assistant__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.assistant__item:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.assistant__item.is-active {
+  background: var(--accent-soft);
+  border-left: 2px solid var(--accent);
+  color: var(--ink);
+}
+
+.assistant__item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assistant__item .faint {
+  font-size: 0.72rem;
+}
+
+.assistant__remove {
+  background: none;
+  border: 0;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.assistant__list li:hover .assistant__remove,
+.assistant__remove:focus-visible {
+  opacity: 1;
+}
+
+.assistant__remove:hover {
+  color: var(--flag);
+}
+
+.assistant__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.assistant__context {
+  padding: 0.9rem 1rem;
+}
+
+.assistant__question {
+  margin: 0.5rem 0 0.7rem;
+  font-family: var(--serif);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.assistant__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.assistant__missing {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.assistant__chat {
+  min-height: 12rem;
+}
+
+.assistant__body > p {
+  margin: 0 0 0.6rem;
+  line-height: 1.6;
+}
+
+.assistant__body > p:last-child,
+.assistant__body > ul:last-child,
+.assistant__body > ol:last-child {
+  margin-bottom: 0;
+}
+
+.assistant__guides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--rule);
+}
+
+.assistant__guide {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.8rem;
+}
+
+.assistant__guide:hover {
+  border-color: var(--accent);
+}
+
+.assistant__guide .faint {
+  font-size: 0.72rem;
+}
+
+.assistant__followups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.assistant__thinking {
+  opacity: 0.75;
+}
+
+.assistant__starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.assistant__composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: end;
+  position: sticky;
+  bottom: 0;
+  padding: 0.7rem 0;
+  background: linear-gradient(to top, var(--paper) 70%, transparent);
+}
+
+.assistant__composer textarea {
+  resize: vertical;
+  min-height: 2.8rem;
+  font: inherit;
+}
+
+@media (max-width: 900px) {
+  .assistant {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .assistant__rail {
+    position: static;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+    padding-right: 0;
+    padding-bottom: 0.9rem;
+    min-height: 0;
+  }
+
+  .assistant__list {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .assistant__list li {
+    flex: 0 0 auto;
+    max-width: 15rem;
+  }
+}

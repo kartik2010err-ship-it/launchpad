@@ -85,6 +85,10 @@ export default function AppRail({ projectId, subtitle, children }: Props) {
         ) : (
           <Unavailable label="Research Coach" />
         )}
+        <Link
+          to={projectId ? `/projects/${projectId}/assistant` : "/assistant"}
+          label="AI Research Assistant"
+        />
       </Group>
 
       {ws && !current?.is_personal && (

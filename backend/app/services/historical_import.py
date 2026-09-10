@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import logging
 import re
 from dataclasses import dataclass, field
@@ -259,6 +260,103 @@ class CsvSource:
                 raw_metadata={"csv_line": line_number, **extras},
             )
             yield record
+
+
+class JsonSource:
+    """Records from a JSON document a human assembled and may store.
+
+    Accepts three shapes, because an approved dataset arrives in whatever shape
+    its publisher chose and re-typing it by hand is how transcription errors get
+    into a catalogue that is supposed to be authoritative:
+
+        [ {...}, {...} ]                      a bare list
+        { "projects": [ {...} ] }             a wrapped list — also "records",
+                                              "items", "data", "results"
+        { "id-1": {...}, "id-2": {...} }      an object keyed by id
+
+    Field names go through the same alias table as CSV, so ``project_title``,
+    ``title`` and ``Title`` all land in the right column. Unrecognised keys are
+    preserved in ``raw_metadata`` rather than dropped — a field we do not model
+    today may be one we promote to a column next month, and re-importing to
+    recover it is cheaper than going back to the source.
+    """
+
+    _LIST_KEYS = ("projects", "records", "items", "data", "results")
+
+    def __init__(self, text: str, source: str = "json", permission_note: str | None = None) -> None:
+        self.name = source
+        self._text = text
+        self._permission_note = permission_note
+
+    def _rows(self) -> list[dict]:
+        try:
+            parsed = json.loads(self._text)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"That is not valid JSON: {exc.msg} (line {exc.lineno}).") from exc
+
+        if isinstance(parsed, list):
+            rows = parsed
+        elif isinstance(parsed, dict):
+            for key in self._LIST_KEYS:
+                if isinstance(parsed.get(key), list):
+                    rows = parsed[key]
+                    break
+            else:
+                # An object keyed by id. Carry the key through as the id so
+                # deduplication uses the publisher's own identifier.
+                if all(isinstance(v, dict) for v in parsed.values()) and parsed:
+                    rows = [{"source_project_id": k, **v} for k, v in parsed.items()]
+                else:
+                    raise ValueError(
+                        "Expected a list of projects, or an object with a "
+                        f"{' / '.join(self._LIST_KEYS)} list, or an object keyed by project id."
+                    )
+        else:
+            raise ValueError("Expected a JSON list or object at the top level.")
+
+        bad = [i for i, row in enumerate(rows) if not isinstance(row, dict)]
+        if bad:
+            raise ValueError(f"Entry {bad[0] + 1} is not an object.")
+        return rows
+
+    def fetch(self) -> Iterable[NormalisedRecord]:
+        for index, row in enumerate(self._rows(), start=1):
+            fields: dict = {}
+            extras: dict = {}
+            for key, value in row.items():
+                target = _COLUMN_ALIASES.get(str(key).strip().lower())
+                if target is None:
+                    if value not in (None, "", [], {}):
+                        extras[str(key)] = value
+                    continue
+                fields[target] = value
+
+            title = _clean(fields.get("title"))
+            if not title:
+                # No title, no project. Skipping beats importing a blank card.
+                continue
+
+            year = _to_int(fields.get("year"))
+            yield NormalisedRecord(
+                source=self.name,
+                source_project_id=_clean(fields.get("source_project_id"))
+                or derive_id(self.name, title, year),
+                title=title,
+                source_url=_clean(fields.get("source_url")),
+                year=year,
+                category=_clean(fields.get("category")),
+                subcategory=_clean(fields.get("subcategory")),
+                project_type=_clean(fields.get("project_type")),
+                team_project=_to_bool(fields.get("team_project")),
+                abstract=_clean(fields.get("abstract")),
+                awards=_clean(fields.get("awards")),
+                student_display=_clean(fields.get("student_display")),
+                school_display=_clean(fields.get("school_display")),
+                country=_clean(fields.get("country")),
+                state=_clean(fields.get("state")),
+                permission_note=self._permission_note,
+                raw_metadata={"json_index": index, **extras},
+            )
 
 
 # --------------------------------------------------------------------------- #

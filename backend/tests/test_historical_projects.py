@@ -352,3 +352,124 @@ def test_an_outsider_cannot_ask_about_someone_elses_project(client: TestClient) 
         headers=auth(client, "riley@example.edu"),
     )
     assert response.status_code == 404
+
+
+# --------------------------------------------------------------------------- #
+# JSON import
+# --------------------------------------------------------------------------- #
+
+JSON_LIST = """[
+  {"title": "Perovskite Stability Under Humidity Cycling", "year": 2022,
+   "category": "Materials Science",
+   "abstract": "We measured degradation of perovskite films across humidity cycles using a control of dry-stored samples.",
+   "awards": "Second Award", "team": false, "url": "https://example.org/p/10"},
+  {"project_title": "Low-Cost Turbidity Sensor", "fair_year": "2021",
+   "category": "Engineering Technology", "custom_field": "kept as metadata"}
+]"""
+
+JSON_WRAPPED = """{"projects": [
+  {"id": "wrapped-1", "title": "Enzyme Kinetics at Low Temperature", "year": 2020,
+   "category": "Biochemistry"}
+]}"""
+
+JSON_KEYED = """{
+  "keyed-a": {"title": "Soil Microbial Diversity Near Roadways", "year": 2019,
+              "category": "Earth and Environmental Sciences"}
+}"""
+
+
+def test_json_list_imports(client: TestClient) -> None:
+    response = client.post(
+        "/historical-projects/import/json",
+        json={
+            "json_text": JSON_LIST,
+            "source": "test-json",
+            "permission_note": "Sample data authored for testing.",
+        },
+        headers=auth(client, CURATOR),
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["created"] == 2
+
+
+def test_json_accepts_a_wrapped_list_and_an_object_keyed_by_id(client: TestClient) -> None:
+    headers = auth(client, CURATOR)
+    wrapped = client.post(
+        "/historical-projects/import/json",
+        json={"json_text": JSON_WRAPPED, "source": "test-json-2", "permission_note": "test"},
+        headers=headers,
+    )
+    assert wrapped.status_code == 200, wrapped.text
+    assert wrapped.json()["created"] == 1
+
+    keyed = client.post(
+        "/historical-projects/import/json",
+        json={"json_text": JSON_KEYED, "source": "test-json-3", "permission_note": "test"},
+        headers=headers,
+    )
+    assert keyed.status_code == 200, keyed.text
+    assert keyed.json()["created"] == 1
+
+    with SessionLocal() as db:
+        row = (
+            db.query(HistoricalProject)
+            .filter(HistoricalProject.source == "test-json-3")
+            .one()
+        )
+        # The publisher's own key becomes the dedup id.
+        assert row.source_project_id == "keyed-a"
+
+
+def test_json_aliases_field_names_and_keeps_unknown_ones(client: TestClient) -> None:
+    with SessionLocal() as db:
+        row = (
+            db.query(HistoricalProject)
+            .filter(HistoricalProject.title == "Low-Cost Turbidity Sensor")
+            .one()
+        )
+    assert row.year == 2021  # from "fair_year"
+    assert row.raw_metadata.get("custom_field") == "kept as metadata"
+
+
+def test_reimporting_json_updates_rather_than_duplicates(client: TestClient) -> None:
+    headers = auth(client, CURATOR)
+    again = client.post(
+        "/historical-projects/import/json",
+        json={
+            "json_text": JSON_LIST,
+            "source": "test-json",
+            "permission_note": "Sample data authored for testing.",
+        },
+        headers=headers,
+    )
+    assert again.json()["created"] == 0
+    assert again.json()["updated"] == 2
+
+
+def test_malformed_json_is_rejected_with_a_useful_message(client: TestClient) -> None:
+    response = client.post(
+        "/historical-projects/import/json",
+        json={"json_text": "{not json", "source": "bad", "permission_note": "test"},
+        headers=auth(client, CURATOR),
+    )
+    assert response.status_code == 400
+    assert "valid json" in response.json()["detail"].lower()
+
+
+def test_json_of_the_wrong_shape_says_what_was_expected(client: TestClient) -> None:
+    response = client.post(
+        "/historical-projects/import/json",
+        json={"json_text": '{"total": 5}', "source": "bad", "permission_note": "test"},
+        headers=auth(client, CURATOR),
+    )
+    assert response.status_code == 400
+    assert "expected" in response.json()["detail"].lower()
+
+
+def test_json_import_is_curator_only(client: TestClient) -> None:
+    response = client.post(
+        "/historical-projects/import/json",
+        json={"json_text": JSON_LIST, "source": "x", "permission_note": "test"},
+        headers=auth(client, STUDENT),
+    )
+    assert response.status_code == 403

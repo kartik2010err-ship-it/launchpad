@@ -211,17 +211,29 @@ export default function IsefExplorer() {
 
           {data && data.total === 0 && active.length === 0 ? (
             <Card sunk>
-              <h3>The catalogue is empty</h3>
+              <h3>No historical project data has been loaded yet</h3>
               <p className="muted">
-                No historical projects have been imported yet. This app does not scrape the
-                ISEF abstract database: Society for Science's terms forbid automated access
-                and forbid storing their material without written permission.
+                The Explorer is built and working — searching, filtering, project pages and
+                the similarity matcher against your own project are all in place. There is
+                simply nothing in the catalogue for them to search.
               </p>
               <p className="muted">
-                A workspace owner or lead can add projects the club is permitted to store —
-                one at a time, or as a CSV — from{" "}
-                <Link to="/isef/import">Import projects</Link>.
+                <strong>Why it is empty:</strong> Research Coach does not download projects
+                from the ISEF abstract database. Society for Science's terms of use forbid
+                automated access ("robots, spiders or offline readers") and forbid
+                reproducing their materials without prior written permission. Rather than
+                fill this page with data we have no right to store — or with invented
+                examples — it stays empty until real, permitted data arrives.
               </p>
+              <p className="muted">
+                <strong>How to fill it:</strong> a workspace owner or lead can import
+                projects the club is permitted to store — your own fair's records, an
+                openly-licensed dataset, or anything you hold written permission for — as a
+                CSV, a JSON file, or one at a time.
+              </p>
+              <Link className="btn btn--small" to="/isef/import">
+                Import projects
+              </Link>
             </Card>
           ) : null}
 

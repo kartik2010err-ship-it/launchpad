@@ -323,6 +323,8 @@ export const api = {
     get<T.HistoricalSimilarResult>(`/historical-projects/for-project/${projectId}/similar`),
   importHistoricalCsv: (payload: { csv_text: string; source: string; permission_note: string }) =>
     post<T.HistoricalImportReport>("/historical-projects/import/csv", payload),
+  importHistoricalJson: (payload: { json_text: string; source: string; permission_note: string }) =>
+    post<T.HistoricalImportReport>("/historical-projects/import/json", payload),
   importHistoricalProject: (payload: Record<string, unknown>) =>
     post<T.HistoricalImportReport>("/historical-projects/import/manual", payload),
 };

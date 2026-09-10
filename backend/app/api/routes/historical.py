@@ -27,6 +27,7 @@ from app.schemas.historical import (
     HistoricalProjectDetail,
     HistoricalSearchResult,
     ImportReportOut,
+    JsonImportIn,
     ManualProjectIn,
     SimilarMatch,
     SimilarResult,
@@ -231,6 +232,31 @@ def import_csv(
     _require_curator(db, user)
     source = historical_import.CsvSource(
         payload.csv_text, source=payload.source, permission_note=payload.permission_note
+    )
+    try:
+        records = list(source.fetch())
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    report = historical_import.import_records(db, records)
+    return ImportReportOut(**report.as_dict())
+
+
+@router.post("/import/json", response_model=ImportReportOut)
+def import_json(
+    payload: JsonImportIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+) -> ImportReportOut:
+    """Bulk import from a JSON document the caller is permitted to store.
+
+    Same deduplication as CSV: re-running an updated file corrects the existing
+    rows instead of doubling the catalogue.
+    """
+
+    _require_curator(db, user)
+    source = historical_import.JsonSource(
+        payload.json_text, source=payload.source, permission_note=payload.permission_note
     )
     try:
         records = list(source.fetch())

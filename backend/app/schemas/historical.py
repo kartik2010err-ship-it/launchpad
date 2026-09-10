@@ -142,6 +142,12 @@ class CsvImportIn(BaseModel):
     permission_note: str = Field(min_length=3, max_length=500)
 
 
+class JsonImportIn(BaseModel):
+    json_text: str = Field(min_length=2)
+    source: str = Field(default="json", max_length=60)
+    permission_note: str = Field(min_length=3, max_length=500)
+
+
 class ImportReportOut(BaseModel):
     created: int
     updated: int

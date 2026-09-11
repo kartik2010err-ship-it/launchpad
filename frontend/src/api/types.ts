@@ -426,6 +426,7 @@ export interface WorkspaceDetail extends WorkspaceSummary {
   join_code: string | null;
   default_project_visibility: ProjectVisibility;
   leads_can_assign_mentors: boolean;
+  members_can_create_teams: boolean;
   created_at: string;
 }
 
@@ -633,6 +634,7 @@ export interface TeamSummary {
   status: ProjectStatus | null;
   next_deadline: string | null;
   i_am_member: boolean;
+  i_can_edit: boolean;
   created_at: string;
 }
 
@@ -820,9 +822,53 @@ export type OutreachStatus =
 export interface OutreachTemplate {
   key: string;
   name: string;
+  category: string;
+  category_label: string;
   when_to_use: string;
+  avoid_when: string;
   structure: { section: string; guidance: string }[];
   ask_examples: string[];
+  required_personalisation: string[];
+  example_subjects: string[];
+  why_it_works: string;
+  common_mistakes: string[];
+  register: string;
+}
+
+export interface OutreachTone {
+  key: string;
+  name: string;
+  description: string;
+}
+
+export interface OutreachPersonalisation {
+  verdict: "too_short" | "generic" | "unclear" | "specific";
+  is_specific: boolean;
+  message: string;
+  word_count: number;
+}
+
+export interface OutreachQuality {
+  score: number;
+  verdict: string;
+  strengths: string[];
+  improvements: string[];
+  word_count: number;
+  personalisation: OutreachPersonalisation;
+}
+
+export interface OutreachPrefill {
+  project_id: number;
+  project_title: string;
+  research_topic: string | null;
+  research_question: string | null;
+  category: string;
+  competition: string | null;
+  timeline: string | null;
+  methodology_summary: string | null;
+  student_name: string;
+  school: string | null;
+  grade_level: number | null;
 }
 
 export interface OutreachDraft {
@@ -831,6 +877,10 @@ export interface OutreachDraft {
   body: string;
   sections: { section: string; content: string }[];
   word_count: number;
+  tone: string;
+  tones: OutreachTone[];
+  quality: OutreachQuality;
+  sources_note: string;
   spam_warning: string;
   etiquette: string[];
   before_you_send: string[];
@@ -860,4 +910,221 @@ export interface OutreachSummary {
   by_status: { status: OutreachStatus; label: string; count: number }[];
   follow_ups_due: OutreachContact[];
   spam_warning: string;
+}
+
+/* ------------------------------------------------- research assistant -- */
+
+export interface AssistantGuideRef {
+  guide_id: string;
+  title: string;
+  category: string;
+  summary: string;
+  read_minutes: number;
+}
+
+export interface AssistantMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  follow_ups: string[];
+  provider: string | null;
+  created_at: string;
+  guides: AssistantGuideRef[];
+}
+
+export interface AssistantProjectContext {
+  project_id: number;
+  title: string;
+  question: string;
+  project_type: string;
+  category: string;
+  grade_level: number;
+  stage: string;
+  competition: string | null;
+  readiness: number | null;
+  answered_count: number;
+  total_questions: number;
+  known_fields: string[];
+  missing_fields: string[];
+  safety_flags: string[];
+  next_deadline: string | null;
+}
+
+export interface AssistantSuggestedAction {
+  key: string;
+  label: string;
+  prompt: string;
+}
+
+export interface AssistantConversationSummary {
+  id: number;
+  title: string;
+  project_id: number | null;
+  project_title: string | null;
+  shared_with_team: boolean;
+  message_count: number;
+  last_message_preview: string | null;
+  updated_at: string;
+}
+
+export interface AssistantConversation {
+  id: number;
+  title: string;
+  project_id: number | null;
+  shared_with_team: boolean;
+  created_at: string;
+  updated_at: string;
+  messages: AssistantMessage[];
+  context: AssistantProjectContext | null;
+  suggested_actions: AssistantSuggestedAction[];
+}
+
+/* ------------------------------------------------- ISEF project explorer -- */
+
+export interface HistoricalSourceInformation {
+  title: string;
+  year: number | null;
+  category: string | null;
+  subcategory: string | null;
+  project_type: string | null;
+  team_project: boolean | null;
+  abstract: string | null;
+  awards: string | null;
+  student_display: string | null;
+  school_display: string | null;
+  country: string | null;
+  state: string | null;
+  source: string;
+  source_url: string | null;
+  permission_note: string | null;
+}
+
+export interface HistoricalAIAnalysis {
+  research_question: string | null;
+  why_it_matters: string | null;
+  methodology: string | null;
+  scientific_depth: string | null;
+  novelty: string | null;
+  evidence: string | null;
+  lessons_for_students: string[];
+  model: string;
+  generated_at: string;
+}
+
+export interface HistoricalProjectCard {
+  id: number;
+  title: string;
+  year: number | null;
+  category: string | null;
+  team_project: boolean | null;
+  awards: string | null;
+  has_abstract: boolean;
+  source: string;
+  derived_tags: string[];
+}
+
+export interface HistoricalProjectDetail {
+  id: number;
+  source_information: HistoricalSourceInformation;
+  source_categories: string[];
+  derived_tags: string[];
+  ai_analysis: HistoricalAIAnalysis | null;
+  analysis_unavailable_reason: string | null;
+  copying_notice: string;
+}
+
+export interface HistoricalFacetValue {
+  value: string | number;
+  count: number;
+}
+
+export interface HistoricalFacets {
+  total: number;
+  awarded: number;
+  categories: HistoricalFacetValue[];
+  years: HistoricalFacetValue[];
+  sources: HistoricalFacetValue[];
+  derived_tags: HistoricalFacetValue[];
+}
+
+export interface HistoricalSearchResult {
+  results: HistoricalProjectCard[];
+  total: number;
+  limit: number;
+  offset: number;
+  copying_notice: string;
+}
+
+export interface HistoricalSimilarMatch {
+  project: HistoricalProjectCard;
+  score: number;
+  reasons: string[];
+}
+
+export interface HistoricalSimilarResult {
+  matches: HistoricalSimilarMatch[];
+  matched_on: string[];
+  empty_notice: string | null;
+  copying_notice: string;
+}
+
+export interface HistoricalImportReport {
+  created: number;
+  updated: number;
+  skipped: number;
+  total: number;
+  errors: string[];
+}
+
+/* --------------------------------------------------------- home dashboard -- */
+
+export interface NextActionItem {
+  action: string;
+  why: string;
+  guide_ids: string[];
+}
+
+export interface NextActionPlan {
+  primary: NextActionItem;
+  secondary: NextActionItem[];
+  source: string;
+}
+
+export interface HomeAttentionItem {
+  kind: "safety" | "overdue" | "blocked" | "outreach";
+  label: string;
+  detail: string;
+}
+
+export interface HomeUpcoming {
+  title: string;
+  due_date: string;
+  phase: string;
+  days_away: number;
+}
+
+export interface HomeProject {
+  id: number;
+  title: string;
+  question: string;
+  stage: string;
+  status: ProjectStatus;
+  readiness: number | null;
+  information_completeness: number | null;
+  competition: string | null;
+  competition_date: string | null;
+  is_team_project: boolean;
+  workspace_id: number;
+}
+
+export interface HomeDashboard {
+  has_project: boolean;
+  project: HomeProject | null;
+  next_action: NextActionPlan;
+  attention: HomeAttentionItem[];
+  upcoming: HomeUpcoming[];
+  suggested_guides: { guide_id: string; title: string; summary: string; read_minutes: number }[];
+  similar_historical_count: number;
+  other_projects: { id: number; title: string; stage: string; status: ProjectStatus }[];
+  follow_ups_due: number;
 }

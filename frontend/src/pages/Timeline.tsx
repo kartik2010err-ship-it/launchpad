@@ -21,11 +21,10 @@ function TaskRow({ task, onChange }: { task: TimelineTask; onChange: (status: Ta
   const source = SOURCE_COPY[task.requirement_source];
   return (
     <div className={`task${task.status === "complete" ? " is-complete" : ""}`}>
-      <input
+      <input className="w-auto mt-2"
         type="checkbox"
         checked={task.status === "complete"}
         onChange={(e) => onChange(e.target.checked ? "complete" : "in_progress")}
-        style={{ width: "auto", marginTop: "0.35rem" }}
         aria-label={`Mark ${task.title} complete`}
       />
       <div className="task__body">
@@ -195,7 +194,7 @@ export default function TimelinePage() {
       {timeline.data && (
         <>
           <Card sunk>
-            <div className="row" style={{ justifyContent: "space-between" }}>
+            <div className="row row--between">
               <span>
                 {timeline.data.competition_name} · {formatDate(timeline.data.competition_date)}
               </span>
@@ -208,12 +207,12 @@ export default function TimelinePage() {
 
           {timeline.data.warnings.map((warning, i) => (
             <Callout key={i} tone={warning.severity === "high" ? "flag" : "warn"} title={warning.message}>
-              <p style={{ marginBottom: 0 }}>{warning.recommendation}</p>
+              <p className="mb-0">{warning.recommendation}</p>
             </Callout>
           ))}
 
           <Callout tone="note" title="About the requirement labels">
-            <p style={{ marginBottom: 0 }}>{timeline.data.requirement_disclaimer}</p>
+            <p className="mb-0">{timeline.data.requirement_disclaimer}</p>
           </Callout>
 
           {Object.entries(phases).map(([phase, tasks], index) => (

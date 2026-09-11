@@ -55,7 +55,12 @@ class TeamCreate(BaseModel):
     mentor_id: int | None = None
     competition_key: str | None = None
     max_members_override: int | None = Field(default=None, ge=1, le=12)
+    # Off means the team is unlisted and the join code is the only way in.
     is_discoverable: bool = True
+    # Whether the creator joins the team they are making. A student forming
+    # their own team says yes (and the API forces it, since a member cannot
+    # create a team they are not on); a coach setting up the season says no.
+    join_as_member: bool = True
 
 
 class TeamUpdate(BaseModel):
@@ -101,6 +106,9 @@ class TeamSummary(BaseModel):
     status: str | None
     next_deadline: date | None
     i_am_member: bool
+    # Section 9: 'My teams' means teams you actually joined, for everyone —
+    # including an owner who can see every team in the workspace.
+    i_can_edit: bool = False
     created_at: datetime
 
 

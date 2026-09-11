@@ -103,12 +103,12 @@ export default function JudgePrep() {
               <div key={i} className={`turn turn--${turn.who}`}>
                 <div className="turn__who">{turn.who === "judge" ? "Judge" : "You"}</div>
                 {turn.reaction && (
-                  <p className="muted" style={{ marginBottom: "0.5rem" }}>
+                  <p className="muted mb-2">
                     {turn.reaction}
                   </p>
                 )}
                 <div>{turn.text}</div>
-                {turn.probing && <div className="faint" style={{ marginTop: "0.3rem" }}>Probing: {turn.probing}</div>}
+                {turn.probing && <div className="faint mt-1">Probing: {turn.probing}</div>}
               </div>
             ))}
           </div>
@@ -121,7 +121,7 @@ export default function JudgePrep() {
               onChange={(e) => setDraft(e.target.value)}
               placeholder="Answer out loud, then type roughly what you said."
             />
-            <div className="row" style={{ marginTop: "0.6rem" }}>
+            <div className="row mt-3">
               <button className="btn" onClick={answer} disabled={busy || !draft.trim()}>
                 {busy ? "…" : "Answer"}
               </button>
@@ -142,7 +142,7 @@ export default function JudgePrep() {
       {report && (
         <Card title="How that went">
           <Gauge label="Interview readiness" value={report.readiness} />
-          <div className="grid-2" style={{ marginTop: "1rem" }}>
+          <div className="grid-2 mt-4">
             {report.strong_answers.length > 0 && (
               <div>
                 <div className="faint">Answered well</div>
@@ -185,7 +185,7 @@ export default function JudgePrep() {
             )}
           </div>
           {report.better_explanations.length > 0 && (
-            <div style={{ marginTop: "1rem" }}>
+            <div className="mt-4">
               <div className="faint">Ways to say it better</div>
               <ul className="tight-list">
                 {report.better_explanations.map((item, i) => (

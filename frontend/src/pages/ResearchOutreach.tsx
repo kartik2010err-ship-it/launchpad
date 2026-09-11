@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { api, ApiError } from "../api/client";
+import OutreachTemplateLibrary from "../components/OutreachTemplateLibrary";
+import OutreachQualityPanel from "../components/OutreachQualityPanel";
 import { useAsync } from "../api/useAsync";
 import { Callout, Card, ErrorNote, Loading, Pill, formatDate } from "../components/ui";
 import { GlobalShell } from "./ResearchLibrary";
@@ -34,6 +36,7 @@ function statusTone(status: OutreachStatus): "ok" | "warn" | "flag" | "neutral" 
 
 export default function ResearchOutreach() {
   const templates = useAsync(() => api.outreachTemplates(), []);
+  const [templateKey, setTemplateKey] = useState("research_guidance");
   const contacts = useAsync(() => api.outreachContacts(), []);
   const summary = useAsync(() => api.outreachSummary(), []);
 
@@ -66,7 +69,7 @@ export default function ResearchOutreach() {
               three.
             </p>
             {summary.data.follow_ups_due.map((row) => (
-              <div key={row.id} className="row" style={{ justifyContent: "space-between" }}>
+              <div key={row.id} className="row row--between">
                 <span>
                   <strong>{row.researcher_name}</strong>
                   {row.institution && <span className="faint"> · {row.institution}</span>}
@@ -77,7 +80,22 @@ export default function ResearchOutreach() {
           </Card>
         )}
 
-        <Builder templates={templates.data?.templates ?? []} onSaved={reloadAll} />
+        <OutreachTemplateLibrary
+          templates={templates.data?.templates ?? []}
+          categories={templates.data?.categories ?? []}
+          selected={templateKey}
+          onSelect={setTemplateKey}
+          sources={templates.data?.sources}
+          sourcesNote={templates.data?.sources_note}
+        />
+
+        <Builder
+          templates={templates.data?.templates ?? []}
+          tones={templates.data?.tones ?? []}
+          templateKey={templateKey}
+          onTemplateKey={setTemplateKey}
+          onSaved={reloadAll}
+        />
 
         <Card title="Outreach tracker">
           {contacts.loading && <Loading what="Loading contacts" />}
@@ -138,7 +156,7 @@ function TrackerRow({ row, onChange }: { row: OutreachContact; onChange: () => v
           ))}
         </select>
       </div>
-      <div className="row" style={{ gap: "0.4rem" }}>
+      <div className="row gap-2">
         {row.follow_up_due && <Pill tone="warn">Follow up</Pill>}
         {!row.follow_up_due && row.follow_up_on && (
           <span className="faint">follow up {formatDate(row.follow_up_on)}</span>
@@ -154,12 +172,24 @@ function TrackerRow({ row, onChange }: { row: OutreachContact; onChange: () => v
 
 function Builder({
   templates,
+  tones,
+  templateKey,
+  onTemplateKey,
   onSaved,
 }: {
   templates: import("../api/types").OutreachTemplate[];
+  tones: import("../api/types").OutreachTone[];
+  templateKey: string;
+  onTemplateKey: (key: string) => void;
   onSaved: () => void;
 }) {
-  const [templateKey, setTemplateKey] = useState("research_guidance");
+  const setTemplateKey = onTemplateKey;
+  const [tone, setTone] = useState("standard");
+  const [personalisation, setPersonalisation] =
+    useState<import("../api/types").OutreachPersonalisation | null>(null);
+  const [quality, setQuality] = useState<import("../api/types").OutreachQuality | null>(null);
+  const [editedBody, setEditedBody] = useState("");
+  const [copied, setCopied] = useState<string | null>(null);
   const [researcher, setResearcher] = useState("");
   const [institution, setInstitution] = useState("");
   const [email, setEmail] = useState("");
@@ -180,21 +210,54 @@ function Builder({
     setError(null);
     setDraft(null);
     try {
-      setDraft(
-        await api.buildOutreachDraft({
-          template_key: templateKey,
-          researcher_name: researcher,
-          their_work: theirWork,
-          specific_request: request,
-          research_topic: topic,
-          research_question: question || null,
-          timeline: timeline || null,
-        }),
-      );
+      const built = await api.buildOutreachDraft({
+        template_key: templateKey,
+        researcher_name: researcher,
+        their_work: theirWork,
+        specific_request: request,
+        research_topic: topic,
+        research_question: question || null,
+        timeline: timeline || null,
+        tone,
+      });
+      setDraft(built);
+      setEditedBody(built.body);
+      setQuality(built.quality);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not build that draft.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  const [scoring, setScoring] = useState(false);
+
+  async function copy(what: string, text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(what);
+      window.setTimeout(() => setCopied(null), 1600);
+    } catch {
+      /* clipboard blocked; the text is selectable in the box either way */
+    }
+  }
+
+  async function rescore() {
+    if (!draft) return;
+    setScoring(true);
+    try {
+      setQuality(
+        await api.scoreOutreachDraft({
+          subject: draft.subject,
+          body: editedBody,
+          their_work: theirWork,
+          specific_request: request,
+        }),
+      );
+    } catch {
+      /* advisory only */
+    } finally {
+      setScoring(false);
     }
   }
 
@@ -207,7 +270,7 @@ function Builder({
       their_work: theirWork,
       template_key: templateKey,
       subject: draft.subject,
-      body: draft.body,
+      body: editedBody || draft.body,
       status: "draft",
     });
     onSaved();
@@ -221,7 +284,7 @@ function Builder({
         separate a message worth reading from spam.
       </p>
 
-      <form onSubmit={build} style={{ marginTop: "0.9rem" }}>
+      <form className="mt-4" onSubmit={build}>
         <label className="field">
           <span>What are you asking for?</span>
           <select value={templateKey} onChange={(e) => setTemplateKey(e.target.value)}>
@@ -233,6 +296,26 @@ function Builder({
           </select>
         </label>
         {template && <p className="faint">{template.when_to_use}</p>}
+
+        {/* Section 41. Three registers, none of them flattering. */}
+        <fieldset className="outreach-tones">
+          <legend className="faint">Tone</legend>
+          {tones.map((option) => (
+            <label key={option.key} className="outreach-tones__option">
+              <input
+                type="radio"
+                name="tone"
+                value={option.key}
+                checked={tone === option.key}
+                onChange={() => setTone(option.key)}
+              />
+              <span>
+                <strong>{option.name}</strong>
+                <span className="faint"> — {option.description}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
 
         <div className="grid-2">
           <label className="field">
@@ -289,12 +372,31 @@ function Builder({
             rows={3}
             value={theirWork}
             onChange={(e) => setTheirWork(e.target.value)}
+            onBlur={async () => {
+              if (!theirWork.trim()) return setPersonalisation(null);
+              try {
+                setPersonalisation(await api.checkOutreachPersonalisation(theirWork));
+              } catch {
+                /* the check is advisory; the builder enforces it anyway */
+              }
+            }}
             placeholder="your 2023 paper on thermal stress indices, particularly the finding that visible bleaching lags measurable stress by several days"
           />
           <span className="faint">
             Required. This is the sentence that proves the email was written for them.
           </span>
         </label>
+
+        {/* Section 36. Checked as soon as they look away from the field, so a
+            weak answer is caught before a draft exists to feel attached to. */}
+        {personalisation && !personalisation.is_specific ? (
+          <Callout tone="warn" title="Why this researcher?">
+            <p>{personalisation.message}</p>
+          </Callout>
+        ) : null}
+        {personalisation?.is_specific ? (
+          <p className="faint">✓ {personalisation.message}</p>
+        ) : null}
 
         <label className="field">
           <span>What exactly are you asking for?</span>
@@ -333,25 +435,59 @@ function Builder({
       </form>
 
       {draft && (
-        <div style={{ marginTop: "1.2rem" }}>
+        <div className="outreach-draft">
           <div className="card__title">
-            <h3>Draft — {draft.word_count} words</h3>
-            <button className="btn btn--small" onClick={save}>
-              Save to tracker
-            </button>
+            <h3>Draft</h3>
+            <div className="row gap-2">
+              <button className="btn btn--quiet btn--small" type="button" onClick={() => copy("subject", draft.subject)}>
+                {copied === "subject" ? "Copied" : "Copy subject"}
+              </button>
+              <button className="btn btn--quiet btn--small" type="button" onClick={() => copy("body", editedBody)}>
+                {copied === "body" ? "Copied" : "Copy email"}
+              </button>
+              <button className="btn btn--small" type="button" onClick={save}>
+                Save to tracker
+              </button>
+            </div>
           </div>
-          <p className="faint">Subject: {draft.subject}</p>
-          <div className="draft">{draft.body}</div>
 
-          <div style={{ marginTop: "0.9rem" }}>
-            <Callout tone="note" title="Before you send">
-              <ul className="tick-list tick-list--arrow">
-                {draft.before_you_send.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </Callout>
+          <p className="faint">Subject: {draft.subject}</p>
+
+          {/* Editable on purpose. Every guide we drew on says the same thing:
+              an email that sounds like a template reads like one. The student
+              rewriting this in their own words is the goal, not a fallback. */}
+          <textarea
+            className="input outreach-draft__body"
+            rows={16}
+            value={editedBody}
+            onChange={(event) => setEditedBody(event.target.value)}
+            aria-label="Draft email"
+          />
+
+          <div className="row gap-2 row--wrap">
+            <button className="btn btn--quiet btn--small" type="button" onClick={rescore} disabled={scoring}>
+              {scoring ? "Checking…" : "Re-check quality"}
+            </button>
+            <button className="btn btn--quiet btn--small" type="button" onClick={() => setEditedBody(draft.body)}>
+              Reset to generated
+            </button>
+            <span className="faint">
+              Rewrite it in your own voice before sending — that is what stops it reading as
+              generated.
+            </span>
           </div>
+
+          {quality ? <OutreachQualityPanel quality={quality} /> : null}
+
+          <Callout tone="note" title="Before you send">
+            <ul className="tick-list tick-list--arrow">
+              {draft.before_you_send.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </Callout>
+
+          {draft.sources_note ? <p className="faint">{draft.sources_note}</p> : null}
         </div>
       )}
     </Card>

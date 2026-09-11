@@ -39,6 +39,7 @@ class WorkspaceUpdate(BaseModel):
     description: str | None = None
     default_project_visibility: ProjectVisibility | None = None
     leads_can_assign_mentors: bool | None = None
+    members_can_create_teams: bool | None = None
 
 
 class WorkspaceSummary(ORMModel):
@@ -60,6 +61,7 @@ class WorkspaceDetail(WorkspaceSummary):
     join_code: str | None = None  # withheld from plain members
     default_project_visibility: ProjectVisibility
     leads_can_assign_mentors: bool
+    members_can_create_teams: bool = True
     created_at: datetime
 
 

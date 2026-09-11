@@ -45,7 +45,7 @@ function ProjectCard({ project }: { project: WinningProjectSummary }) {
       <div className="guide-card__summary">
         {project.competition_name ?? project.source_name}
       </div>
-      <div style={{ marginTop: "0.5rem" }}>
+      <div className="mt-2">
         {project.is_illustrative ? (
           <Pill tone="warn">Teaching example — not a real project</Pill>
         ) : (
@@ -96,7 +96,7 @@ export default function WinningProjects() {
         </Callout>
 
         <Card title="Filter">
-          <div className="row" style={{ gap: "0.5rem" }}>
+          <div className="row gap-2">
             <input
               className="input"
               style={{ maxWidth: "240px" }}
@@ -289,11 +289,11 @@ export function WinningProjectDetail() {
                     <Provenance value={field.provenance} />
                   </div>
                   {field.value === null ? (
-                    <p className="faint" style={{ margin: 0 }}>
+                    <p className="faint m-0">
                       Not available from this source.
                     </p>
                   ) : typeof field.value === "string" ? (
-                    <p style={{ margin: 0 }}>{field.value}</p>
+                    <p className="m-0">{field.value}</p>
                   ) : (
                     <ul className="tick-list tick-list--arrow">
                       {Object.entries(field.value).map(([label, text]) => (
@@ -328,7 +328,7 @@ export function WinningProjectDetail() {
               <Callout tone="note">
                 <p>{data.analysis_notice}</p>
               </Callout>
-              <div style={{ marginTop: "0.8rem" }}>
+              <div className="mt-4">
                 {data.lessons.map((lesson) => (
                   <div key={lesson.lesson} className="guide-section">
                     <h3>{lesson.lesson}</h3>

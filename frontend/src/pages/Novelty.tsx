@@ -23,17 +23,17 @@ export default function Novelty() {
       </header>
 
       <Card>
-        <div className="row" style={{ justifyContent: "space-between" }}>
+        <div className="row row--between">
           <h2>{copy.label}</h2>
           <Pill tone={copy.tone}>confidence: {novelty.confidence}</Pill>
         </div>
-        <p style={{ marginTop: "0.6rem", marginBottom: 0 }}>{novelty.headline}</p>
+        <p className="mt-3 mb-0">{novelty.headline}</p>
       </Card>
 
       <Callout tone="warn" title="What this assessment is based on">
-        <p style={{ marginBottom: 0 }}>{novelty.evidence_note}</p>
+        <p className="mb-0">{novelty.evidence_note}</p>
         {novelty.literature_search_performed ? null : (
-          <p className="muted" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+          <p className="muted mt-2 mb-0">
             No literature search was run and no papers are being cited. This is pattern-matching against ideas that are
             common at fairs, not a claim about what exists in the published record. Searching Google Scholar yourself is
             still the only way to know.

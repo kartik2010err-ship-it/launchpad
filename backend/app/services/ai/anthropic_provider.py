@@ -23,14 +23,17 @@ from pydantic import BaseModel, ValidationError
 
 from app.core.config import get_settings
 from app.models.enums import Stage
+from app.schemas.assistant import AssistantReply
 from app.schemas.evaluation import (
     EvaluationResult,
     InterviewStep,
     RefinementResult,
     ResearchPlanDoc,
 )
+from app.services.ai import assistant_heuristic
 from app.services.ai.heuristic import HeuristicProvider
 from app.services.ai.prompts import (
+    ASSISTANT_SYSTEM_PROMPT,
     EVALUATION_INSTRUCTION,
     INTERVIEW_INSTRUCTION,
     PLAN_INSTRUCTION,
@@ -160,3 +163,92 @@ def _parse_json(text: str) -> dict | None:
     except json.JSONDecodeError:
         log.warning("AI response was not valid JSON")
         return None
+
+
+# --------------------------------------------------------------------------- #
+# Research Assistant
+# --------------------------------------------------------------------------- #
+
+
+def _assistant_reply_impl(
+    self,
+    message: str,
+    context: dict | None = None,
+    history: list[dict] | None = None,
+) -> AssistantReply:
+    """Multi-turn chat. Falls back to the offline mentor on any failure.
+
+    Unlike the scoring calls this one is a real conversation, so the transport
+    differs: prior turns are replayed as messages and the project context is
+    pinned to the front of the first user turn rather than appended to an
+    instruction.
+    """
+
+    fallback = assistant_heuristic.reply(message, context, history)
+    if not self.settings.anthropic_api_key:
+        log.warning("anthropic provider selected but no API key configured; using offline assistant")
+        return fallback
+
+    turns: list[dict] = []
+    for turn in (history or [])[-12:]:
+        role = turn.get("role")
+        content = (turn.get("content") or "").strip()
+        if role in {"user", "assistant"} and content:
+            turns.append({"role": role, "content": content})
+
+    opening = message
+    if context:
+        opening = (
+            "PROJECT CONTEXT (what the app already knows — do not ask the student to repeat it):\n"
+            f"{json.dumps(context, indent=2, default=str)}\n\n"
+            f"STUDENT MESSAGE:\n{message}"
+        )
+    else:
+        opening = (
+            "No project is attached to this conversation, so you have no project context.\n\n"
+            f"STUDENT MESSAGE:\n{message}"
+        )
+
+    # Context rides on the latest user turn, so it stays current as the thread grows.
+    turns.append({"role": "user", "content": opening})
+
+    body = {
+        "model": self.settings.anthropic_model,
+        "max_tokens": 1600,
+        "system": ASSISTANT_SYSTEM_PROMPT,
+        "messages": turns,
+    }
+    try:
+        response = self._client.post(
+            self.settings.anthropic_base_url,
+            json=body,
+            headers={
+                "x-api-key": self.settings.anthropic_api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+        )
+        response.raise_for_status()
+        data = response.json()
+    except Exception:  # noqa: BLE001 — degrade to the offline mentor on any failure
+        log.exception("assistant call failed; falling back to the offline assistant")
+        return fallback
+
+    text = "".join(
+        block.get("text", "") for block in data.get("content", []) if block.get("type") == "text"
+    )
+    raw = _parse_json(text)
+    if raw is None:
+        # A well-formed prose answer is still worth showing; only the structure was lost.
+        cleaned = text.strip()
+        if cleaned:
+            return AssistantReply(reply=cleaned, follow_ups=[], guide_ids=[])
+        return fallback
+    try:
+        return AssistantReply.model_validate(raw)
+    except ValidationError:
+        log.warning("assistant reply failed validation; falling back to the offline assistant")
+        return fallback
+
+
+AnthropicProvider.assistant_reply = _assistant_reply_impl

@@ -34,7 +34,7 @@ export default function WorkspaceDashboard() {
   return (
     <div className="stack">
       <header className="page-head">
-        <div className="row" style={{ justifyContent: "space-between" }}>
+        <div className="row row--between">
           <div>
             <h1>{workspace.name}</h1>
             <p>
@@ -118,11 +118,11 @@ export default function WorkspaceDashboard() {
           </Card>
 
           <Card title="Where projects are">
-            <div className="stack" style={{ gap: "0.5rem" }}>
+            <div className="stack gap-2">
               {Object.entries(stats.by_stage)
                 .sort((a, b) => b[1] - a[1])
                 .map(([stage, count]) => (
-                  <div key={stage} className="row" style={{ gap: "0.75rem" }}>
+                  <div key={stage} className="row gap-3">
                     <span style={{ minWidth: 170, fontSize: "0.86rem" }}>
                       {humanStage(stage)}
                     </span>
@@ -173,7 +173,7 @@ export default function WorkspaceDashboard() {
           </Card>
 
           <Card title="Poster & interview readiness">
-            <div className="stack" style={{ gap: "0.7rem" }}>
+            <div className="stack gap-3">
               <div>
                 <div className="faint">Poster progress (average)</div>
                 <Meter percent={stats.average_poster} />
@@ -182,7 +182,7 @@ export default function WorkspaceDashboard() {
                 <div className="faint">Interview prep (average)</div>
                 <Meter percent={stats.average_interview} />
               </div>
-              <div className="row faint" style={{ gap: "0.4rem" }}>
+              <div className="row faint gap-2">
                 <span>{stats.awaiting_approval} awaiting approval</span>
                 <span>·</span>
                 <span>{stats.without_mentor} without a mentor</span>

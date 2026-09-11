@@ -73,7 +73,7 @@ export default function Notebook() {
             Column headings built from your own variables. Copy these into a sheet before you start collecting.
           </p>
           {Object.entries(templates.data).map(([key, template]) => (
-            <div key={key} style={{ marginBottom: "0.8rem" }}>
+            <div className="mb-4" key={key}>
               <div className="faint">{template.title}</div>
               <table className="table">
                 <thead>

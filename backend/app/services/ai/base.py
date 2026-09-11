@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from app.schemas.assistant import AssistantReply
 from app.schemas.evaluation import (
     EvaluationResult,
     InterviewPrepSet,
@@ -66,3 +67,21 @@ class ResearchAIProvider(Protocol):
 
     def mock_judge_report(self, signals: ProjectSignals, transcript: list[dict]) -> MockJudgeReport:
         """Summarise how the mock interview went."""
+
+    def assistant_reply(
+        self,
+        message: str,
+        context: dict | None = None,
+        history: list[dict] | None = None,
+    ) -> AssistantReply:
+        """Answer one Research Assistant turn as a mentor, not as an answer key.
+
+        ``context`` is the payload from ``app.services.assistant_context.build``:
+        everything already on record about the project, or ``None`` for a chat
+        opened outside one. ``history`` is prior turns as
+        ``{"role": ..., "content": ...}``.
+
+        Implementations must teach and challenge rather than produce the
+        student's science for them (section 14), and must cite the Research
+        Library by guide id rather than by URL (section 15).
+        """

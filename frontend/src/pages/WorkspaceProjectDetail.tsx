@@ -107,11 +107,10 @@ export default function WorkspaceProjectDetail() {
   return (
     <div className="stack">
       <header className="page-head">
-        <div className="row" style={{ justifyContent: "space-between" }}>
+        <div className="row row--between">
           <div>
             <button
-              className="btn btn--quiet btn--small"
-              style={{ marginBottom: "0.5rem" }}
+              className="btn btn--quiet btn--small mb-2"
               onClick={() => navigate(`/workspaces/${wsId}/projects`)}
             >
               ← All projects
@@ -131,7 +130,7 @@ export default function WorkspaceProjectDetail() {
       <div className="question-hero">
         <q>{project.current_question}</q>
         {revisions.length > 1 && (
-          <div className="faint" style={{ marginTop: "0.4rem" }}>
+          <div className="faint mt-2">
             Version {revisions[0].version} of {revisions.length}
           </div>
         )}
@@ -142,7 +141,7 @@ export default function WorkspaceProjectDetail() {
           tone={progress.data.status === "blocked" ? "flag" : "warn"}
           title="Why this is flagged"
         >
-          <p style={{ marginBottom: 0 }}>{progress.data.current_risk}</p>
+          <p className="mb-0">{progress.data.current_risk}</p>
         </Callout>
       )}
 
@@ -150,22 +149,22 @@ export default function WorkspaceProjectDetail() {
         <div className="stack">
           {progress.data && (
             <Card title="Progress">
-              <div className="stack" style={{ gap: "0.7rem" }}>
+              <div className="stack gap-3">
                 {progress.data.areas.map((area) => (
                   <div key={area.key}>
-                    <div className="row" style={{ justifyContent: "space-between" }}>
-                      <span style={{ fontSize: "0.86rem" }}>{area.label}</span>
+                    <div className="row row--between">
+                      <span className="text-sm">{area.label}</span>
                     </div>
                     <Meter percent={area.percent} />
                     <div className="faint">{area.note}</div>
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: "0.9rem", borderTop: "1px solid var(--rule)", paddingTop: "0.7rem" }}>
+              <div className="divided-top">
                 <div className="faint">Current priority</div>
                 <div>{progress.data.current_priority ?? "Nothing scheduled."}</div>
                 {progress.data.next_deadline && (
-                  <div className="faint" style={{ marginTop: "0.3rem" }}>
+                  <div className="faint mt-1">
                     Next deadline {formatDate(progress.data.next_deadline)}
                     {progress.data.days_to_next_deadline !== null
                       ? ` — ${progress.data.days_to_next_deadline} days`
@@ -180,7 +179,7 @@ export default function WorkspaceProjectDetail() {
             <>
               <Card title="AI evaluation" aside={<span className="num">{evalData.overall_score}/100</span>}>
                 <p className="muted">{evalData.mentor_summary}</p>
-                <div className="stack" style={{ gap: "0.8rem", marginTop: "0.8rem" }}>
+                <div className="stack gap-4 mt-4">
                   {evalData.dimensions.map((dimension) => (
                     <div key={dimension.key}>
                       <Gauge
@@ -232,8 +231,8 @@ export default function WorkspaceProjectDetail() {
                   </Pill>
                 }
               >
-                <p style={{ marginBottom: "0.5rem" }}>{evalData.novelty.headline}</p>
-                <p className="faint" style={{ marginBottom: 0 }}>
+                <p className="mb-2">{evalData.novelty.headline}</p>
+                <p className="faint mb-0">
                   {evalData.novelty.evidence_note}
                 </p>
               </Card>
@@ -276,10 +275,9 @@ export default function WorkspaceProjectDetail() {
           <Card title="Assignment">
             <div className="faint">Mentor</div>
             {isOversight(current?.my_role) ? (
-              <select
+              <select className="mt-1"
                 value={project.mentor_id ?? ""}
                 onChange={(e) => assign(e.target.value)}
-                style={{ marginTop: "0.3rem" }}
               >
                 <option value="">Unassigned</option>
                 {mentors.map((m) => (
@@ -291,7 +289,7 @@ export default function WorkspaceProjectDetail() {
             ) : (
               <div>{project.mentor_id ? "Assigned" : "Unassigned"}</div>
             )}
-            <div className="faint" style={{ marginTop: "0.7rem" }}>
+            <div className="faint mt-3">
               Competition
             </div>
             <div>{project.competition_name ?? "Not set"}</div>
@@ -314,7 +312,7 @@ export default function WorkspaceProjectDetail() {
 
           <Card title="Feedback">
             {comments.data && comments.data.length > 0 ? (
-              <div className="stack" style={{ gap: "0.6rem", marginBottom: "0.9rem" }}>
+              <div className="stack gap-3 mb-4">
                 {comments.data.map((comment: WorkspaceComment) => (
                   <div key={comment.id} className="turn">
                     <div className="turn__who">
@@ -322,7 +320,7 @@ export default function WorkspaceProjectDetail() {
                       {relativeTime(comment.created_at)}
                     </div>
                     <div>{comment.body}</div>
-                    <div style={{ marginTop: "0.35rem" }}>
+                    <div className="mt-2">
                       <Pill tone={TYPE_TONE[comment.comment_type]}>
                         {humanise(comment.comment_type)}
                       </Pill>
@@ -340,11 +338,10 @@ export default function WorkspaceProjectDetail() {
               placeholder="Be specific about what to change and why."
               style={{ minHeight: "4.5rem" }}
             />
-            <div className="row" style={{ marginTop: "0.5rem" }}>
-              <select
+            <div className="row mt-2">
+              <select className="w-auto"
                 value={type}
                 onChange={(e) => setType(e.target.value as CommentType)}
-                style={{ width: "auto" }}
               >
                 {COMMENT_TYPES.map(([value, label]) => (
                   <option key={value} value={value}>

@@ -250,9 +250,27 @@ export const api = {
   /* ------------------------------------------------------------ outreach -- */
 
   outreachTemplates: () =>
-    get<{ templates: T.OutreachTemplate[]; spam_warning: string; etiquette: string[] }>(
-      "/outreach/templates",
-    ),
+    get<{
+      templates: T.OutreachTemplate[];
+      categories: { key: string; label: string }[];
+      tones: T.OutreachTone[];
+      spam_warning: string;
+      etiquette: string[];
+      sources: { name: string; url: string }[];
+      sources_note: string;
+    }>("/outreach/templates"),
+  outreachPrefill: (projectId: number) =>
+    get<T.OutreachPrefill>(`/outreach/prefill/${projectId}`),
+  checkOutreachPersonalisation: (theirWork: string) =>
+    post<T.OutreachPersonalisation>("/outreach/personalisation-check", {
+      their_work: theirWork,
+    }),
+  scoreOutreachDraft: (payload: {
+    subject: string;
+    body: string;
+    their_work?: string;
+    specific_request?: string;
+  }) => post<T.OutreachQuality>("/outreach/score", payload),
   buildOutreachDraft: (payload: Record<string, unknown>) =>
     post<T.OutreachDraft>("/outreach/draft", payload),
   outreachContacts: () => get<T.OutreachContact[]>("/outreach/contacts"),
@@ -263,4 +281,50 @@ export const api = {
   deleteOutreachContact: (id: number) =>
     request<void>(`/outreach/contacts/${id}`, { method: "DELETE" }),
   outreachSummary: () => get<T.OutreachSummary>("/outreach/summary"),
+
+  /* --------------------------------------------------- research assistant -- */
+
+  assistantConversations: (projectId?: number) =>
+    get<T.AssistantConversationSummary[]>(
+      `/assistant/conversations${projectId ? `?project_id=${projectId}` : ""}`,
+    ),
+  startAssistantConversation: (projectId?: number | null) =>
+    post<T.AssistantConversation>("/assistant/conversations", { project_id: projectId ?? null }),
+  assistantConversation: (id: number) =>
+    get<T.AssistantConversation>(`/assistant/conversations/${id}`),
+  sendAssistantMessage: (id: number, content: string) =>
+    post<T.AssistantMessage>(`/assistant/conversations/${id}/messages`, { content }),
+  shareAssistantConversation: (id: number, shared: boolean) =>
+    patch<T.AssistantConversation>(`/assistant/conversations/${id}/share`, {
+      shared_with_team: shared,
+    }),
+  deleteAssistantConversation: (id: number) =>
+    request<void>(`/assistant/conversations/${id}`, { method: "DELETE" }),
+  assistantProjectContext: (projectId: number) =>
+    get<T.AssistantProjectContext>(`/assistant/projects/${projectId}/context`),
+  assistantSuggestedActions: () =>
+    get<T.AssistantSuggestedAction[]>("/assistant/suggested-actions"),
+
+  /* --------------------------------------------------- ISEF explorer -- */
+
+  historicalProjects: (params: Record<string, string | number | boolean | undefined>) => {
+    const search = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "" && value !== false) search.set(key, String(value));
+    });
+    const qs = search.toString();
+    return get<T.HistoricalSearchResult>(`/historical-projects${qs ? `?${qs}` : ""}`);
+  },
+  homeDashboard: () => get<T.HomeDashboard>("/projects/home/dashboard"),
+  historicalFacets: () => get<T.HistoricalFacets>("/historical-projects/facets"),
+  historicalProject: (id: number) =>
+    get<T.HistoricalProjectDetail>(`/historical-projects/${id}`),
+  similarHistoricalProjects: (projectId: number) =>
+    get<T.HistoricalSimilarResult>(`/historical-projects/for-project/${projectId}/similar`),
+  importHistoricalCsv: (payload: { csv_text: string; source: string; permission_note: string }) =>
+    post<T.HistoricalImportReport>("/historical-projects/import/csv", payload),
+  importHistoricalJson: (payload: { json_text: string; source: string; permission_note: string }) =>
+    post<T.HistoricalImportReport>("/historical-projects/import/json", payload),
+  importHistoricalProject: (payload: Record<string, unknown>) =>
+    post<T.HistoricalImportReport>("/historical-projects/import/manual", payload),
 };

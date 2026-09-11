@@ -20,6 +20,10 @@ export default function WorkspaceTeams() {
   const oversight = isOversight(current?.my_role);
 
   const { data, error, loading, reload } = useAsync(() => api.teams(wsId), [wsId]);
+  // The create-team setting lives on the workspace detail, not the summary the
+  // switcher holds, so it is fetched here rather than guessed from a role.
+  const { data: workspace } = useAsync(() => api.workspace(wsId), [wsId]);
+  const canCreate = oversight || workspace?.members_can_create_teams !== false;
 
   const [code, setCode] = useState("");
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -49,7 +53,7 @@ export default function WorkspaceTeams() {
   return (
     <div className="stack">
       <header className="page-head">
-        <div className="row" style={{ justifyContent: "space-between" }}>
+        <div className="row row--between">
           <div>
             <h1>Teams</h1>
             <p>
@@ -57,7 +61,9 @@ export default function WorkspaceTeams() {
               question, timeline, notebook and poster — nothing is copied per person.
             </p>
           </div>
-          {oversight && <NewTeam wsId={wsId} onCreated={reload} />}
+          {canCreate && (
+            <NewTeam wsId={wsId} onCreated={reload} oversight={oversight} />
+          )}
         </div>
       </header>
 
@@ -67,7 +73,7 @@ export default function WorkspaceTeams() {
           <strong>{current?.name}</strong>; a team code puts you onto that team's existing
           project.
         </p>
-        <form className="row" onSubmit={join} style={{ gap: "0.5rem", marginTop: "0.6rem" }}>
+        <form className="row gap-2 mt-3" onSubmit={join}>
           <input
             className="input"
             style={{ maxWidth: "240px", fontFamily: "var(--mono)" }}
@@ -81,14 +87,14 @@ export default function WorkspaceTeams() {
           </button>
         </form>
         {joinError && (
-          <div style={{ marginTop: "0.7rem" }}>
+          <div className="mt-3">
             <Callout tone="flag">
               <p>{joinError}</p>
             </Callout>
           </div>
         )}
         {joined && (
-          <div style={{ marginTop: "0.7rem" }}>
+          <div className="mt-3">
             <Callout tone="note" title={`You are on ${joined}`}>
               <p>
                 You now share that team's project. Any change you make is a change everyone on
@@ -106,16 +112,29 @@ export default function WorkspaceTeams() {
         <Card sunk>
           <h3>No teams here yet</h3>
           <p className="muted">
-            {oversight
-              ? "Create one to group students around a shared project."
+            {canCreate
+              ? "Create one to group students around a shared project — you will be on the team you make."
               : "Ask a workspace lead to create a team, or use a team code if you were given one."}
           </p>
         </Card>
       )}
 
+      {data && data.length > 0 && mine.length === 0 && (
+        <Callout tone="note" title="You are not on a team yet">
+          <p>
+            {oversight
+              ? "You oversee every team below without being a member of any of them. If you are entering your own project, create a team for yourself — it is an ordinary team, with an ordinary code."
+              : "Use a team code above to join one, or create your own."}
+          </p>
+        </Callout>
+      )}
+
       {mine.length > 0 && (
-        <section className="stack" style={{ gap: "0.75rem" }}>
-          <h2>Your teams</h2>
+        <section className="stack gap-3">
+          <div className="section-head">
+            <h2>My teams</h2>
+            <span className="faint">Teams you are actually on</span>
+          </div>
           {mine.map((team) => (
             <TeamCard key={team.id} wsId={wsId} team={team} />
           ))}
@@ -123,8 +142,15 @@ export default function WorkspaceTeams() {
       )}
 
       {others.length > 0 && (
-        <section className="stack" style={{ gap: "0.75rem" }}>
-          <h2>Other teams in this workspace</h2>
+        <section className="stack gap-3">
+          <div className="section-head">
+            <h2>All teams</h2>
+            <span className="faint">
+              {oversight
+                ? "You oversee these as workspace lead — you are not a member of them"
+                : "Other teams in this workspace"}
+            </span>
+          </div>
           {others.map((team) => (
             <TeamCard key={team.id} wsId={wsId} team={team} />
           ))}
@@ -142,14 +168,13 @@ function TeamCard({
   team: import("../api/types").TeamSummary;
 }) {
   return (
-    <Link
+    <Link className="plain-link"
       to={`/workspaces/${wsId}/teams/${team.id}`}
-      style={{ textDecoration: "none", color: "inherit" }}
     >
       <Card
         title={team.name}
         aside={
-          <div className="row" style={{ gap: "0.4rem" }}>
+          <div className="row gap-2">
             {team.status && <StatusPill status={team.status} />}
             <Pill tone={team.seats_left === 0 ? "inert" : "neutral"}>
               {team.member_count}/{team.max_team_size}
@@ -162,8 +187,8 @@ function TeamCard({
         {team.description && <p className="muted">{team.description}</p>}
 
         {team.project_title ? (
-          <div className="question-hero" style={{ marginBottom: "0.7rem" }}>
-            <q style={{ fontSize: "1.02rem" }}>{team.project_title}</q>
+          <div className="question-hero mb-3">
+            <q className="text-base">{team.project_title}</q>
           </div>
         ) : (
           <p className="faint">No shared project started yet.</p>
@@ -192,7 +217,7 @@ function TeamCard({
         </div>
 
         {team.join_code && (
-          <div className="faint" style={{ marginTop: "0.5rem" }}>
+          <div className="faint mt-2">
             Team code <code className="code">{team.join_code}</code>
           </div>
         )}
@@ -201,10 +226,25 @@ function TeamCard({
   );
 }
 
-function NewTeam({ wsId, onCreated }: { wsId: number; onCreated: () => void }) {
+/**
+ * Section 5. A member creating a team always joins it — the API enforces that,
+ * and offering a checkbox that does nothing would be a lie. Oversight gets the
+ * choice, because a coach setting up the season is not entering the fair.
+ */
+function NewTeam({
+  wsId,
+  onCreated,
+  oversight,
+}: {
+  wsId: number;
+  onCreated: () => void;
+  oversight: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [discoverable, setDiscoverable] = useState(true);
+  const [joinAsMember, setJoinAsMember] = useState(!oversight);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -217,6 +257,8 @@ function NewTeam({ wsId, onCreated }: { wsId: number; onCreated: () => void }) {
         name,
         description: description || null,
         competition_key: "azsef",
+        is_discoverable: discoverable,
+        join_as_member: oversight ? joinAsMember : true,
       });
       setName("");
       setDescription("");
@@ -257,8 +299,38 @@ function NewTeam({ wsId, onCreated }: { wsId: number; onCreated: () => void }) {
           placeholder="Reef imagery and bleaching signatures"
         />
       </label>
+      <label className="row gap-2 mt-1">
+        <input
+          type="checkbox"
+          checked={discoverable}
+          onChange={(e) => setDiscoverable(e.target.checked)}
+        />
+        <span className="faint">
+          Other people in this workspace can see this team exists. Uncheck to make the join
+          code the only way in.
+        </span>
+      </label>
+
+      {oversight ? (
+        <label className="row gap-2 mt-1">
+          <input
+            type="checkbox"
+            checked={joinAsMember}
+            onChange={(e) => setJoinAsMember(e.target.checked)}
+          />
+          <span className="faint">
+            Put me on this team. Leave it off when you are setting a team up for students —
+            overseeing a team does not make you a member of it.
+          </span>
+        </label>
+      ) : (
+        <p className="faint mt-1">
+          You will be on this team, as its team lead.
+        </p>
+      )}
+
       {error && <ErrorNote message={error} />}
-      <div className="row" style={{ gap: "0.4rem", marginTop: "0.6rem" }}>
+      <div className="row gap-2 mt-3">
         <button className="btn btn--small" disabled={busy || name.trim().length < 2}>
           {busy ? "Creating…" : "Create"}
         </button>

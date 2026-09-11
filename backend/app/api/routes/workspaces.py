@@ -87,6 +87,7 @@ def _detail(db: Session, workspace: Workspace, membership: WorkspaceMembership) 
             ),
             "default_project_visibility": workspace.default_project_visibility,
             "leads_can_assign_mentors": workspace.leads_can_assign_mentors,
+            "members_can_create_teams": workspace.members_can_create_teams,
             "created_at": workspace.created_at,
         }
     )

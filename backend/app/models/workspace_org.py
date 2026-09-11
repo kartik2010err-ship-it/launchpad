@@ -58,6 +58,10 @@ class Workspace(Base):
     )
     # Leads can assign mentors unless the owner turns this off.
     leads_can_assign_mentors: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Section 5: a club where students organise themselves turns this on; a
+    # classroom where the teacher assigns groups turns it off. Either way the
+    # creator of a team joins it — there is no hidden "owner team" concept.
+    members_can_create_teams: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # A personal workspace is created automatically for every account so the
     # app works for a lone student who never joins a club.

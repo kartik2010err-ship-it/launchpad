@@ -7,6 +7,7 @@ so the hosted provider and this one grade against the same definitions.
 from __future__ import annotations
 
 from app.models.enums import Stage
+from app.schemas.assistant import AssistantReply
 from app.schemas.evaluation import (
     EvaluationResult,
     InterviewPrepSet,
@@ -20,6 +21,7 @@ from app.schemas.evaluation import (
 )
 from app.services import interview_bank, judging, novelty, plan_builder, poster, refine, rubric, safety, scoring
 from app.services.signals import ProjectSignals
+from app.services.ai import assistant_heuristic
 
 
 class HeuristicProvider:
@@ -101,6 +103,17 @@ class HeuristicProvider:
 # --------------------------------------------------------------------------- #
 # Narrative assembly
 # --------------------------------------------------------------------------- #
+
+    def assistant_reply(
+        self,
+        message: str,
+        context: dict | None = None,
+        history: list[dict] | None = None,
+    ) -> AssistantReply:
+        """Offline mentor. See app.services.ai.assistant_heuristic."""
+
+        return assistant_heuristic.reply(message, context, history)
+
 
 
 def _summary(signals, dims, overall, completeness, screening) -> str:

@@ -30,11 +30,10 @@ export default function CoachRecommendations({ projectId }: { projectId: number 
             Each weakness the engine found is linked to the guide that explains that specific
             thing.
           </p>
-          <div className="stack" style={{ gap: "0.6rem", marginTop: "0.8rem" }}>
+          <div className="stack gap-3 mt-4">
             {recommended.map((guide) => (
-              <div
+              <div className="divided-top"
                 key={guide.guide_id}
-                style={{ borderTop: "1px solid var(--rule)", paddingTop: "0.6rem" }}
               >
                 <div className="faint">{guide.reason}</div>
                 <Link to={`/library/${guide.guide_id}`}>{guide.title} →</Link>
@@ -49,9 +48,9 @@ export default function CoachRecommendations({ projectId }: { projectId: number 
 
       {projects.length > 0 && (
         <Card title="Examples in your category">
-          <div className="stack" style={{ gap: "0.5rem" }}>
+          <div className="stack gap-2">
             {projects.map((project) => (
-              <div key={project.id} className="row" style={{ justifyContent: "space-between" }}>
+              <div key={project.id} className="row row--between">
                 <Link to={`/winning-projects/${project.id}`}>{project.title}</Link>
                 {project.is_illustrative ? (
                   <Pill tone="warn">Teaching example</Pill>
@@ -61,9 +60,9 @@ export default function CoachRecommendations({ projectId }: { projectId: number 
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "0.9rem" }}>
+          <div className="mt-4">
             <Callout tone="warn" title="Inspiration, not a template">
-              <p style={{ marginBottom: 0 }}>{examples.data?.warning}</p>
+              <p className="mb-0">{examples.data?.warning}</p>
             </Callout>
           </div>
         </Card>

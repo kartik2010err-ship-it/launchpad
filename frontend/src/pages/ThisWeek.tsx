@@ -31,7 +31,7 @@ export default function ThisWeek() {
 
       {readiness.data && (
         <Card title="Readiness by area" aside={<span className="num muted">{readiness.data.overall}% overall</span>}>
-          <div className="stack" style={{ gap: "0.8rem" }}>
+          <div className="stack gap-4">
             {readiness.data.areas.map((area) => (
               <div key={area.key}>
                 <Gauge label={area.label} value={area.percent} suffix="%" />
@@ -39,7 +39,7 @@ export default function ThisWeek() {
               </div>
             ))}
           </div>
-          <p className="faint" style={{ marginTop: "0.9rem", marginBottom: 0 }}>
+          <p className="faint mt-4 mb-0">
             {readiness.data.disclaimer}
           </p>
         </Card>
@@ -52,7 +52,7 @@ export default function ThisWeek() {
         <>
           {week.data.upcoming_deadline && (
             <Card sunk>
-              <div className="row" style={{ justifyContent: "space-between" }}>
+              <div className="row row--between">
                 <span>
                   Next deadline <strong>{formatDate(week.data.upcoming_deadline)}</strong>
                 </span>

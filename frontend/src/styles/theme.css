@@ -57,6 +57,33 @@
 
   --radius: 4px;
   --shell-rail: 240px;
+
+  /* Spacing scale. Every gap, pad and margin in a new component comes from
+     here. The point is not the specific numbers — it is that there is a fixed
+     set of them, so two screens built months apart still line up. */
+  --space-1: 0.25rem;
+  --space-2: 0.4rem;
+  --space-3: 0.6rem;
+  --space-4: 0.9rem;
+  --space-5: 1.2rem;
+  --space-6: 1.6rem;
+  --space-7: 2.4rem;
+
+  /* Type scale. Five sizes is enough for an instrument panel; a sixth is
+     almost always a sign that hierarchy is being solved with size instead of
+     with weight, colour or space. */
+  --text-xs: 0.72rem;
+  --text-sm: 0.82rem;
+  --text-base: 0.94rem;
+  --text-lg: 1.12rem;
+  --text-xl: 1.5rem;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-bold: 600;
+
+  --line-tight: 1.3;
+  --line-body: 1.6;
 }
 
 * {
@@ -1944,3 +1971,677 @@ textarea:focus {
   border-radius: var(--radius);
   padding: 0.9rem 1rem;
 }
+
+/* ------------------------------------------------------------------------ */
+/* Research Assistant                                                        */
+/*                                                                           */
+/* Two columns: a quiet list of past threads, and the conversation. Nothing   */
+/* here introduces a colour — every value is a token, so the assistant reads  */
+/* as the same product as the workspace and the library.                     */
+/* ------------------------------------------------------------------------ */
+
+.assistant {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 1.6rem;
+  align-items: start;
+}
+
+.assistant__rail {
+  position: sticky;
+  top: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-right: 1.2rem;
+  border-right: 1px solid var(--rule);
+  min-height: 60vh;
+}
+
+.assistant__privacy {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+
+.assistant__list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.assistant__list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.assistant__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.assistant__item:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.assistant__item.is-active {
+  background: var(--accent-soft);
+  border-left: 2px solid var(--accent);
+  color: var(--ink);
+}
+
+.assistant__item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assistant__item .faint {
+  font-size: 0.72rem;
+}
+
+.assistant__remove {
+  background: none;
+  border: 0;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.assistant__list li:hover .assistant__remove,
+.assistant__remove:focus-visible {
+  opacity: 1;
+}
+
+.assistant__remove:hover {
+  color: var(--flag);
+}
+
+.assistant__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.assistant__context {
+  padding: 0.9rem 1rem;
+}
+
+.assistant__question {
+  margin: 0.5rem 0 0.7rem;
+  font-family: var(--serif);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.assistant__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.assistant__missing {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.assistant__chat {
+  min-height: 12rem;
+}
+
+.assistant__body > p {
+  margin: 0 0 0.6rem;
+  line-height: 1.6;
+}
+
+.assistant__body > p:last-child,
+.assistant__body > ul:last-child,
+.assistant__body > ol:last-child {
+  margin-bottom: 0;
+}
+
+.assistant__guides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--rule);
+}
+
+.assistant__guide {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.8rem;
+}
+
+.assistant__guide:hover {
+  border-color: var(--accent);
+}
+
+.assistant__guide .faint {
+  font-size: 0.72rem;
+}
+
+.assistant__followups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.assistant__thinking {
+  opacity: 0.75;
+}
+
+.assistant__starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.assistant__composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: end;
+  position: sticky;
+  bottom: 0;
+  padding: 0.7rem 0;
+  background: linear-gradient(to top, var(--paper) 70%, transparent);
+}
+
+.assistant__composer textarea {
+  resize: vertical;
+  min-height: 2.8rem;
+  font: inherit;
+}
+
+@media (max-width: 900px) {
+  .assistant {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .assistant__rail {
+    position: static;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+    padding-right: 0;
+    padding-bottom: 0.9rem;
+    min-height: 0;
+  }
+
+  .assistant__list {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .assistant__list li {
+    flex: 0 0 auto;
+    max-width: 15rem;
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* ISEF Project Explorer                                                     */
+/*                                                                           */
+/* Source information and AI analysis are never interleaved. The AI block     */
+/* uses the sunk card so it reads as commentary on the record above it        */
+/* rather than as more of the record.                                        */
+/* ------------------------------------------------------------------------ */
+
+.isef-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.isef-filters .input {
+  max-width: 15rem;
+  font-size: var(--text-sm);
+}
+
+.isef-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: var(--space-3);
+}
+
+.isef-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color 0.12s ease;
+}
+
+.isef-card:hover {
+  border-color: var(--rule-strong);
+}
+
+.isef-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.isef-card__head h3 {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--line-tight);
+}
+
+.isef-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+}
+
+.isef-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.isef-facts {
+  display: grid;
+  grid-template-columns: minmax(8rem, auto) minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.isef-facts dt {
+  color: var(--ink-faint);
+}
+
+.isef-facts dd {
+  margin: 0;
+  color: var(--ink);
+}
+
+@media (max-width: 700px) {
+  .isef-facts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .isef-facts dd {
+    margin-bottom: var(--space-2);
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Research Outreach: template library, tone, quality score                  */
+/* ------------------------------------------------------------------------ */
+
+.outreach-lib {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.outreach-lib__heading {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.outreach-lib__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.outreach-lib__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  text-align: left;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.outreach-lib__item:hover {
+  border-color: var(--rule-strong);
+}
+
+.outreach-lib__item.is-selected {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.outreach-lib__preview {
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--surface-sunk);
+  font-size: var(--text-sm);
+}
+
+.outreach-lib__preview h4 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.outreach-lib__detail {
+  margin: 0 0 var(--space-2);
+  line-height: var(--line-body);
+}
+
+.outreach-tones {
+  margin: var(--space-3) 0;
+  padding: var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.outreach-tones legend {
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.outreach-tones__option {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  font-size: var(--text-sm);
+}
+
+.outreach-draft {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.outreach-draft__body {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: var(--text-sm);
+  line-height: var(--line-body);
+  resize: vertical;
+}
+
+.outreach-score {
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--inert);
+  border-radius: var(--radius);
+  background: var(--surface-sunk);
+  font-size: var(--text-sm);
+}
+
+.outreach-score--ok {
+  border-left-color: var(--ok);
+}
+.outreach-score--warn {
+  border-left-color: var(--warn);
+}
+.outreach-score--flag {
+  border-left-color: var(--flag);
+}
+
+.outreach-score__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.outreach-score__number strong {
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.outreach-score__verdict {
+  margin: 0;
+  font-weight: var(--weight-medium);
+}
+
+.outreach-score h4 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Home dashboard                                                            */
+/*                                                                           */
+/* Exactly one element on this page is loud: the next action. Everything      */
+/* else is deliberately quieter than it, because a page where six things      */
+/* compete for attention answers none of the four questions it exists for.    */
+/* ------------------------------------------------------------------------ */
+
+.home__question {
+  margin: 0 0 var(--space-4);
+  font-family: var(--serif);
+  font-size: var(--text-lg);
+  line-height: var(--line-body);
+  color: var(--ink);
+}
+
+.home__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.home__stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.home__stat .faint {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.home__stat strong {
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.home__next {
+  padding: var(--space-6);
+  border: 1px solid var(--accent-line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.home__next-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+}
+
+.home__next h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+  line-height: var(--line-tight);
+}
+
+.home__next p {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: var(--line-body);
+  max-width: 68ch;
+}
+
+.home__then {
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--accent-line);
+}
+
+.home__then .faint {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.home__attention,
+.home__upcoming,
+.home__others {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.home__attention li,
+.home__upcoming li {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+.home__days {
+  min-width: 2.6rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+
+.home__others li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Utilities                                                                 */
+/*                                                                           */
+/* A small, closed set. These exist so a component never has to reach for an */
+/* inline style to nudge one margin — which is how thirty screens end up      */
+/* with thirty different values for the same gap. Every value below comes     */
+/* from the token scale; nothing here introduces a new number.               */
+/* ------------------------------------------------------------------------ */
+
+.m-0 { margin: 0; }
+.mt-0 { margin-top: 0; }
+.mb-0 { margin-bottom: 0; }
+
+.mt-1 { margin-top: var(--space-1); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+.mt-5 { margin-top: var(--space-5); }
+.mt-6 { margin-top: var(--space-6); }
+.mt-7 { margin-top: var(--space-7); }
+
+.mb-1 { margin-bottom: var(--space-1); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-5 { margin-bottom: var(--space-5); }
+.mb-6 { margin-bottom: var(--space-6); }
+
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+.gap-5 { gap: var(--space-5); }
+.gap-6 { gap: var(--space-6); }
+
+/* The single most repeated layout in the app: a row with something pushed to
+   each end. */
+.row--between { justify-content: space-between; }
+.row--wrap { flex-wrap: wrap; }
+.row--baseline { align-items: baseline; }
+
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); }
+.text-lg { font-size: var(--text-lg); }
+.text-xl { font-size: var(--text-xl); }
+
+/* A link that wraps a card or a block: the block supplies the affordance, so
+   the link must not add underline or colour of its own. */
+.plain-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.divided-top {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+.w-auto { width: auto; }

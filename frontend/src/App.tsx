@@ -4,6 +4,7 @@ import { WorkspaceProvider } from "./state/workspace";
 import Landing from "./pages/Landing";
 import SignIn from "./pages/SignIn";
 import Projects from "./pages/Projects";
+import Home from "./pages/Home";
 import NewProject from "./pages/NewProject";
 import ProjectLayout from "./pages/ProjectLayout";
 import ThisWeek from "./pages/ThisWeek";
@@ -31,6 +32,9 @@ import TeamDashboard from "./pages/TeamDashboard";
 import ResearchLibrary, { GuideDetailPage } from "./pages/ResearchLibrary";
 import WinningProjects, { WinningProjectDetail } from "./pages/WinningProjects";
 import ResearchOutreach from "./pages/ResearchOutreach";
+import ResearchAssistant from "./pages/ResearchAssistant";
+import IsefExplorer, { IsefProjectDetail } from "./pages/IsefExplorer";
+import IsefImport from "./pages/IsefImport";
 
 /** Signed-out visitors get the marketing site; everything else requires auth. */
 function PublicApp() {
@@ -65,8 +69,9 @@ export default function App() {
   return (
     <WorkspaceProvider>
       <Routes>
-        <Route path="/" element={<Navigate to="/projects" replace />} />
-        <Route path="/sign-in" element={<Navigate to="/projects" replace />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/sign-in" element={<Navigate to="/home" replace />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/new" element={<NewProject />} />
 
@@ -89,6 +94,10 @@ export default function App() {
         <Route path="/winning-projects" element={<WinningProjects />} />
         <Route path="/winning-projects/:winnerId" element={<WinningProjectDetail />} />
         <Route path="/outreach" element={<ResearchOutreach />} />
+        <Route path="/assistant" element={<ResearchAssistant />} />
+        <Route path="/isef" element={<IsefExplorer />} />
+        <Route path="/isef/import" element={<IsefImport />} />
+        <Route path="/isef/:historicalId" element={<IsefProjectDetail />} />
 
         <Route path="/projects/:projectId" element={<ProjectLayout />}>
           <Route index element={<ThisWeek />} />
@@ -102,9 +111,10 @@ export default function App() {
           <Route path="poster" element={<Poster />} />
           <Route path="judging" element={<JudgePrep />} />
           <Route path="notebook" element={<Notebook />} />
+          <Route path="assistant" element={<ResearchAssistant />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/projects" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </WorkspaceProvider>
   );

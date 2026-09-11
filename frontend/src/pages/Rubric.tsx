@@ -40,14 +40,14 @@ export default function Rubric() {
       </Card>
 
       <Callout tone="warn" title="Read this before you quote the number">
-        <p style={{ marginBottom: 0 }}>{rubric.disclaimer}</p>
+        <p className="mb-0">{rubric.disclaimer}</p>
       </Callout>
 
       <Card title="Categories being judged now">
         <div className="stack">
           {assessable.map((line) => (
-            <div key={line.key} style={{ borderTop: "1px solid var(--rule)", paddingTop: "0.9rem" }}>
-              <div className="row" style={{ justifyContent: "space-between" }}>
+            <div className="divided-top" key={line.key}>
+              <div className="row row--between">
                 <h3>
                   {line.label} <BasisChip basis={line.basis} />
                 </h3>
@@ -55,7 +55,7 @@ export default function Rubric() {
                   {line.points_projected} / {line.points_possible}
                 </span>
               </div>
-              <div style={{ marginTop: "0.6rem" }}>
+              <div className="mt-3">
                 <Findings
                   strengths={line.strengths}
                   weaknesses={line.weaknesses}
@@ -76,7 +76,7 @@ export default function Rubric() {
           <div className="stack">
             {pending.map((line) => (
               <div key={line.key}>
-                <div className="row" style={{ justifyContent: "space-between" }}>
+                <div className="row row--between">
                   <span>
                     {line.label} <BasisChip basis={line.basis} />
                   </span>

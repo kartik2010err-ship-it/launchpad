@@ -141,3 +141,120 @@ def test_the_new_workspace_setting_would_reach_a_live_database(tmp_path) -> None
     assert "members_can_create_teams" in {
         c["name"] for c in inspect(engine).get_columns("workspaces")
     }
+
+
+# --------------------------------------------------------------------------- #
+# Dialect correctness
+#
+# These exist because of a real outage. The migration rendered a boolean
+# default as `DEFAULT 1`, which SQLite accepts and Postgres rejects. Every test
+# above runs against SQLite, so the whole suite passed while production —
+# Postgres — silently failed the ALTER, left the column missing, and broke
+# every query against that table. Testing one dialect is testing one dialect.
+# --------------------------------------------------------------------------- #
+
+
+def test_a_boolean_default_is_valid_postgres_not_just_valid_sqlite() -> None:
+    import sqlalchemy as sa
+    from sqlalchemy.dialects import postgresql
+
+    from app.db.migrations import _default_clause
+
+    clause = _default_clause(sa.Column("flag", sa.Boolean, default=True), postgresql.dialect())
+    assert clause.strip().lower() == "default true"
+    assert "default 1" not in clause.lower(), "Postgres rejects DEFAULT 1 on a boolean"
+
+    false_clause = _default_clause(
+        sa.Column("flag", sa.Boolean, default=False), postgresql.dialect()
+    )
+    assert false_clause.strip().lower() == "default false"
+
+
+def test_defaults_render_per_dialect() -> None:
+    import sqlalchemy as sa
+    from sqlalchemy.dialects import postgresql, sqlite
+
+    from app.db.migrations import _default_clause
+
+    boolean = sa.Column("flag", sa.Boolean, default=True)
+    assert _default_clause(boolean, sqlite.dialect()).strip().lower() in {
+        "default 1",
+        "default true",
+    }
+    assert _default_clause(boolean, postgresql.dialect()).strip().lower() == "default true"
+
+
+def test_a_string_default_is_escaped_not_interpolated() -> None:
+    import sqlalchemy as sa
+    from sqlalchemy.dialects import postgresql
+
+    from app.db.migrations import _default_clause
+
+    clause = _default_clause(
+        sa.Column("label", sa.String(20), default="it's"), postgresql.dialect()
+    )
+    assert clause == " DEFAULT 'it''s'"
+
+
+def test_every_model_default_renders_for_postgres() -> None:
+    """The real guard: walk the actual schema and make sure nothing in it
+    would produce invalid Postgres on a live ALTER."""
+
+    from sqlalchemy.dialects import postgresql
+
+    from app.db.migrations import _default_clause
+    from app.db.session import Base
+    from app.main import app  # noqa: F401 — loads every model
+
+    dialect = postgresql.dialect()
+    for table in Base.metadata.sorted_tables:
+        for column in table.columns:
+            clause = _default_clause(column, dialect)
+            if not clause:
+                continue
+            lowered = clause.lower()
+            # The specific failure that caused the outage.
+            if isinstance(column.type.as_generic(), type(column.type.as_generic())) and str(
+                column.type
+            ).upper().startswith("BOOLEAN"):
+                assert lowered.strip() in {"default true", "default false"}, (
+                    f"{table.name}.{column.name} would emit {clause!r}, which Postgres rejects"
+                )
+
+
+def test_an_incomplete_migration_is_reported(tmp_path, caplog) -> None:
+    """A half-migrated schema must be loud. Silence is how a missing column
+    becomes a mystery outage instead of a five-minute fix."""
+
+    import logging
+
+    import sqlalchemy as sa
+    from sqlalchemy import create_engine, text
+    from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+    from app.db.migrations import sync_columns
+
+    engine = create_engine(f"sqlite:///{tmp_path / 'loud.db'}")
+    with engine.begin() as conn:
+        conn.execute(text("CREATE TABLE widgets (id INTEGER PRIMARY KEY)"))
+
+    class Base(DeclarativeBase):
+        pass
+
+    class Widget(Base):
+        __tablename__ = "widgets"
+        id: Mapped[int] = mapped_column(primary_key=True)
+        name: Mapped[str] = mapped_column(sa.String(20), default="x")
+
+    # Force the ALTER to fail so the verification pass has something to find.
+    import app.db.migrations as migrations
+
+    original = migrations.CreateColumn
+    with caplog.at_level(logging.ERROR):
+        try:
+            migrations.CreateColumn = lambda col: (_ for _ in ()).throw(RuntimeError("boom"))
+            sync_columns(engine, Base.metadata)
+        finally:
+            migrations.CreateColumn = original
+
+    assert any("MIGRATION INCOMPLETE" in record.message for record in caplog.records)

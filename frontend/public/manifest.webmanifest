@@ -1,0 +1,10 @@
+{
+  "name": "Research Coach",
+  "short_name": "Research Coach",
+  "description": "Turn a science-fair idea into a research question you can defend.",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#0e1319",
+  "theme_color": "#0e1319",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

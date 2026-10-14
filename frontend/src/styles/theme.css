@@ -13,7 +13,7 @@
   team dashboards looking like one product.
 
   Contrast targets: --ink on --surface is ~14:1, --ink-soft ~7:1, --ink-faint
-  ~4.6:1, and every status colour clears 4.5:1 on its own soft background.
+  ~5:1 on every surface, and every status colour clears 4.5:1 on its own soft background.
 
   One deliberate piece of boldness: the student's research question is set large
   in serif, like the object under study. Everything around it stays quiet.
@@ -30,7 +30,7 @@
 
   --ink: #e8edf2;
   --ink-soft: #9aa7b5;
-  --ink-faint: #6b7886;
+  --ink-faint: #8593a1;
 
   --rule: #262f3a;
   --rule-strong: #36414f;
@@ -49,7 +49,7 @@
   --warn-soft: #271f11;
   --ok: #4fd39c;
   --ok-soft: #10241d;
-  --inert: #64717f;
+  --inert: #8593a1; /* text-safe: ≥4.9:1 on every surface */
 
   --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --serif: "IBM Plex Serif", Georgia, serif;
@@ -839,6 +839,13 @@ textarea:focus {
 .switcher__text {
   min-width: 0;
   flex: 1;
+}
+
+.switcher__name,
+.switcher__meta {
+  /* Spans: without block display the ellipsis below never applies, and the
+     member count flows onto the end of a long workspace name. */
+  display: block;
 }
 
 .switcher__name {
@@ -2645,3 +2652,87 @@ textarea:focus {
 }
 
 .w-auto { width: auto; }
+
+/* ---------------------------------------------------------------------------
+   Shared utilities added with the production pass
+   --------------------------------------------------------------------------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  z-index: 100;
+  padding: 0.5rem 0.75rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 4px;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+.auth-page {
+  max-width: 400px;
+  margin: 10vh auto;
+  padding: 0 1rem;
+}
+.auth-page__brand {
+  padding: 0;
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* Full-screen states: first load, a crashed page, a server that is waking. */
+.app-state {
+  min-height: 60vh;
+  display: grid;
+  place-content: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  max-width: 34rem;
+  margin: 0 auto;
+}
+.app-state h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+.app-state p {
+  margin: 0;
+}
+.app-state .row {
+  justify-content: center;
+}
+.spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0 auto;
+  border: 2px solid var(--rule-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

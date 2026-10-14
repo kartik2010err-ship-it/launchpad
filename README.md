@@ -19,10 +19,9 @@ the fair.
 # backend
 cd backend
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 cp .env.example .env
-python -m app.seed          # creates the demo data
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload   # seeds demo data into an empty database
 
 # frontend, in a second terminal
 cd frontend
@@ -43,7 +42,13 @@ Demo logins, password `coach1234` for all of them:
 | `marcus@example.edu` | An engineering project (68) — different rubric path entirely |
 | `mentor@example.edu` | The advisor roster across all four |
 
-Tests: `cd backend && python -m pytest`.
+Tests: `cd backend && python -m pytest` (CI also runs them against Postgres),
+and browser checks in `e2e/` (`npm run smoke`, `npm run flows`).
+
+**Deploying:** one Vercel project serves the frontend and runs the API as a
+Python function under `/api`, backed by a free Neon Postgres database. Setup,
+costs, custom domain and maintenance are in
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ---
 
@@ -149,10 +154,13 @@ Being straight about the edges:
 - **No official rule data.** The AzSEF and ISEF entries are a plausible
   structure, not scraped from official documents. Everything is labelled
   unverified for exactly this reason.
-- **No migrations.** `create_all` on startup. Add Alembic before this holds
-  data anyone cares about.
+- **Additive migrations only.** New tables and columns are applied
+  automatically on the first request after a deploy (`app/db/bootstrap.py`);
+  renames, type changes and drops still need hand-written SQL. Alembic is the
+  next step if the schema starts changing shape.
 - **Auth is minimal.** PBKDF2 hashing and HMAC-signed tokens from the standard
-  library, no refresh tokens, no password reset, no rate limiting.
+  library, with database-backed rate limits on sign-in, sign-up and join
+  codes. No refresh tokens, no password reset, no email verification.
 - **Mentor comments are not threaded** and there are no notifications.
 - **Nothing is exportable.** No PDF of the research plan, no poster export.
 - The AI project manager (re-planning after a delay) recomputes downstream task

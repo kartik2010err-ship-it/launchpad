@@ -53,7 +53,7 @@ class AnthropicProvider(HeuristicProvider):
 
     def __init__(self, client: httpx.Client | None = None) -> None:
         self.settings = get_settings()
-        self._client = client or httpx.Client(timeout=60.0)
+        self._client = client or httpx.Client(timeout=self.settings.anthropic_timeout_seconds)
 
     # -- transport ---------------------------------------------------------- #
 

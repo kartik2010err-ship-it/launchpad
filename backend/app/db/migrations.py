@@ -139,3 +139,9 @@ def _still_missing(engine: Engine, metadata, existing_tables: set[str]) -> list[
             if column.name not in present
         )
     return out
+
+
+def missing_columns(engine: Engine, metadata) -> list[str]:
+    """Mapped columns the database does not have, across every existing table."""
+
+    return _still_missing(engine, metadata, set(inspect(engine).get_table_names()))

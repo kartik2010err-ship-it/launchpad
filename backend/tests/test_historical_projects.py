@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.db.session import SessionLocal
 from app.main import app
@@ -148,7 +149,15 @@ def test_a_malformed_row_does_not_lose_the_batch() -> None:
     )
     with SessionLocal() as db:
         report = historical_import.import_records(db, [good, bad])
-    assert report.created >= 1
+    assert report.created + report.skipped == 2
+    assert all(len(error) < 300 for error in report.errors), "errors must not echo the statement"
+    with SessionLocal() as db:
+        stored = db.scalars(
+            select(HistoricalProject).where(HistoricalProject.source == "unit2")
+        ).all()
+    # On SQLite the long title fits (no length enforcement); on Postgres it is
+    # refused. Either way the good row must be there.
+    assert "ok" in {row.source_project_id for row in stored}
 
 
 def test_derived_ids_are_deterministic() -> None:

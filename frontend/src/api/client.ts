@@ -3,17 +3,27 @@
 
 import type * as T from "./types";
 
-// Deployed default; point VITE_API_BASE at http://127.0.0.1:8000 to run locally.
-const BASE = import.meta.env.VITE_API_BASE ?? "https://research-coach-il9g.onrender.com";
+// The API is served from the same origin under /api: by Vercel in production
+// and by the Vite proxy in development. VITE_API_BASE overrides it only when
+// the API lives somewhere else (for example a separately hosted backend).
+const BASE = (import.meta.env.VITE_API_BASE ?? "/api").replace(/\/$/, "");
 const TOKEN_KEY = "research-coach-token";
 
 export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null; // storage blocked (some private-browsing modes)
+  }
 }
 
 export function setToken(token: string | null): void {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  else localStorage.removeItem(TOKEN_KEY);
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* storage blocked: the session lasts until the tab closes */
+  }
 }
 
 export class ApiError extends Error {
@@ -25,16 +35,56 @@ export class ApiError extends Error {
   }
 }
 
+/** Fired when the server rejects the stored token; AuthProvider signs out. */
+export const SESSION_EXPIRED_EVENT = "research-coach:session-expired";
+
+const TIMEOUT_MS = 70_000;
+const RETRYABLE = new Set([502, 503, 504]);
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function send(path: string, init: RequestInit, token: string | null): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    return await fetch(`${BASE}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init.headers ?? {}),
+      },
+    });
+  } catch (err) {
+    const timedOut = (err as Error).name === "AbortError";
+    throw new ApiError(
+      timedOut
+        ? "The server took too long to answer. Please try again."
+        : "Can't reach Research Coach. Check your connection and try again.",
+      0,
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function request<R>(path: string, init: RequestInit = {}): Promise<R> {
   const token = getToken();
-  const response = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init.headers ?? {}),
-    },
-  });
+  const method = (init.method ?? "GET").toUpperCase();
+  let response: Response;
+  try {
+    response = await send(path, init, token);
+    // Reads are safe to repeat, so give a database that is waking from idle
+    // one more chance before showing the student an error.
+    if (method === "GET" && RETRYABLE.has(response.status)) {
+      await sleep(1500);
+      response = await send(path, init, token);
+    }
+  } catch (err) {
+    if (method !== "GET" || (err as ApiError).status !== 0) throw err;
+    await sleep(1500);
+    response = await send(path, init, token);
+  }
 
   if (!response.ok) {
     let detail = `Request failed (${response.status})`;
@@ -44,6 +94,14 @@ async function request<R>(path: string, init: RequestInit = {}): Promise<R> {
       else if (Array.isArray(body.detail)) detail = body.detail.map((d: any) => d.msg).join("; ");
     } catch {
       /* keep the default message */
+    }
+    // A read can only fail validation on its URL (a mistyped or truncated
+    // link), and pydantic's wording means nothing to a student.
+    if (response.status === 422 && method === "GET") {
+      detail = "This link doesn't point to anything we can open. Check the address and try again.";
+    }
+    if (response.status === 401 && token) {
+      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
     }
     throw new ApiError(detail, response.status);
   }

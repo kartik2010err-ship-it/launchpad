@@ -47,6 +47,7 @@ function TaskRow({ task, onChange }: { task: TimelineTask; onChange: (status: Ta
         </div>
       </div>
       <select
+        aria-label={`Status of ${task.title}`}
         value={task.status}
         onChange={(e) => onChange(e.target.value as TaskStatus)}
         style={{ width: "auto", fontSize: "0.82rem", padding: "0.15rem 0.4rem" }}

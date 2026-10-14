@@ -1,59 +1,88 @@
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Navigate, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
+import { ErrorBoundary, FullPageLoading, FullPageMessage } from "./components/AppStates";
 import { useAuth } from "./state/auth";
 import { WorkspaceProvider } from "./state/workspace";
 import Landing from "./pages/Landing";
-import SignIn from "./pages/SignIn";
-import Projects from "./pages/Projects";
-import Home from "./pages/Home";
-import NewProject from "./pages/NewProject";
-import ProjectLayout from "./pages/ProjectLayout";
-import ThisWeek from "./pages/ThisWeek";
-import Interview from "./pages/Interview";
-import Analysis from "./pages/Analysis";
-import Rubric from "./pages/Rubric";
-import Novelty from "./pages/Novelty";
-import Refine from "./pages/Refine";
-import Plan from "./pages/Plan";
-import TimelinePage from "./pages/Timeline";
-import Poster from "./pages/Poster";
-import JudgePrep from "./pages/JudgePrep";
-import Notebook from "./pages/Notebook";
-import WorkspaceLayout from "./pages/WorkspaceLayout";
-import WorkspaceDashboard from "./pages/WorkspaceDashboard";
-import WorkspaceProjects from "./pages/WorkspaceProjects";
-import WorkspaceProjectDetail from "./pages/WorkspaceProjectDetail";
-import WorkspaceMembers from "./pages/WorkspaceMembers";
-import WorkspaceActivity from "./pages/WorkspaceActivity";
-import WorkspaceSettings from "./pages/WorkspaceSettings";
-import WorkspaceNew from "./pages/WorkspaceNew";
-import WorkspaceJoin from "./pages/WorkspaceJoin";
-import WorkspaceTeams from "./pages/WorkspaceTeams";
-import TeamDashboard from "./pages/TeamDashboard";
-import ResearchLibrary, { GuideDetailPage } from "./pages/ResearchLibrary";
-import WinningProjects, { WinningProjectDetail } from "./pages/WinningProjects";
-import ResearchOutreach from "./pages/ResearchOutreach";
-import ResearchAssistant from "./pages/ResearchAssistant";
-import IsefExplorer, { IsefProjectDetail } from "./pages/IsefExplorer";
-import IsefImport from "./pages/IsefImport";
+import SignIn, { safeNext } from "./pages/SignIn";
+// Pages load on demand: a visitor on the landing page should not download the
+// timeline planner. Landing and sign-in stay in the main bundle for first paint.
+const Projects = lazy(() => import("./pages/Projects"));
+const Home = lazy(() => import("./pages/Home"));
+const NewProject = lazy(() => import("./pages/NewProject"));
+const ProjectLayout = lazy(() => import("./pages/ProjectLayout"));
+const ThisWeek = lazy(() => import("./pages/ThisWeek"));
+const Interview = lazy(() => import("./pages/Interview"));
+const Analysis = lazy(() => import("./pages/Analysis"));
+const Rubric = lazy(() => import("./pages/Rubric"));
+const Novelty = lazy(() => import("./pages/Novelty"));
+const Refine = lazy(() => import("./pages/Refine"));
+const Plan = lazy(() => import("./pages/Plan"));
+const TimelinePage = lazy(() => import("./pages/Timeline"));
+const Poster = lazy(() => import("./pages/Poster"));
+const JudgePrep = lazy(() => import("./pages/JudgePrep"));
+const Notebook = lazy(() => import("./pages/Notebook"));
+const WorkspaceLayout = lazy(() => import("./pages/WorkspaceLayout"));
+const WorkspaceDashboard = lazy(() => import("./pages/WorkspaceDashboard"));
+const WorkspaceProjects = lazy(() => import("./pages/WorkspaceProjects"));
+const WorkspaceProjectDetail = lazy(() => import("./pages/WorkspaceProjectDetail"));
+const WorkspaceMembers = lazy(() => import("./pages/WorkspaceMembers"));
+const WorkspaceActivity = lazy(() => import("./pages/WorkspaceActivity"));
+const WorkspaceSettings = lazy(() => import("./pages/WorkspaceSettings"));
+const WorkspaceNew = lazy(() => import("./pages/WorkspaceNew"));
+const WorkspaceJoin = lazy(() => import("./pages/WorkspaceJoin"));
+const WorkspaceTeams = lazy(() => import("./pages/WorkspaceTeams"));
+const TeamDashboard = lazy(() => import("./pages/TeamDashboard"));
+const ResearchLibrary = lazy(() => import("./pages/ResearchLibrary"));
+const GuideDetailPage = lazy(() => import("./pages/ResearchLibrary").then((m) => ({ default: m.GuideDetailPage })));
+const WinningProjects = lazy(() => import("./pages/WinningProjects"));
+const WinningProjectDetail = lazy(() => import("./pages/WinningProjects").then((m) => ({ default: m.WinningProjectDetail })));
+const ResearchOutreach = lazy(() => import("./pages/ResearchOutreach"));
+const ResearchAssistant = lazy(() => import("./pages/ResearchAssistant"));
+const IsefExplorer = lazy(() => import("./pages/IsefExplorer"));
+const IsefProjectDetail = lazy(() => import("./pages/IsefExplorer").then((m) => ({ default: m.IsefProjectDetail })));
+const IsefImport = lazy(() => import("./pages/IsefImport"));
+
+/** Just signed in: continue to the page that sent them to sign in. */
+function AfterSignIn() {
+  const [params] = useSearchParams();
+  return <Navigate to={safeNext(params.get("next"))} replace />;
+}
 
 /** Signed-out visitors get the marketing site; everything else requires auth. */
 function PublicApp() {
   const location = useLocation();
   if (location.pathname === "/sign-in") return <SignIn />;
   if (location.pathname === "/") return <Landing />;
-  // Any other path while signed out: send through the landing page rather
-  // than silently failing on a route that assumes a logged-in user.
-  return <Navigate to="/" replace />;
+  // Any other path while signed out (an emailed link, a bookmark, an expired
+  // session): sign in, then land back where they were going.
+  const next = encodeURIComponent(location.pathname + location.search);
+  return <Navigate to={`/sign-in?next=${next}`} replace />;
 }
 
 export default function App() {
-  const { user, ready } = useAuth();
+  const { user, ready, bootError, retryBoot, signOut } = useAuth();
+  const location = useLocation();
 
-  if (!ready)
+  if (!ready) return <FullPageLoading label="Starting up…" />;
+
+  if (bootError)
     return (
-      <div className="main">
-        <p className="muted">Starting up…</p>
-      </div>
+      <FullPageMessage
+        title="Can't reach Research Coach right now"
+        actions={
+          <>
+            <button className="btn" onClick={retryBoot}>
+              Try again
+            </button>
+            <button className="btn btn--quiet" onClick={signOut}>
+              Sign out
+            </button>
+          </>
+        }
+      >
+        {bootError} You are still signed in.
+      </FullPageMessage>
     );
 
   if (!user) {
@@ -68,10 +97,12 @@ export default function App() {
 
   return (
     <WorkspaceProvider>
+      <ErrorBoundary key={location.pathname}>
+      <Suspense fallback={<FullPageLoading />}>
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/sign-in" element={<Navigate to="/home" replace />} />
+        <Route path="/sign-in" element={<AfterSignIn />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/new" element={<NewProject />} />
 
@@ -116,6 +147,8 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
+      </Suspense>
+      </ErrorBoundary>
     </WorkspaceProvider>
   );
 }

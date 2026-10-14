@@ -128,12 +128,7 @@ def update_task(
 
 @router.get("/projects/{project_id}/readiness", response_model=ReadinessOut)
 def get_readiness(project: Project = Depends(get_project), db: Session = Depends(get_db)) -> ReadinessOut:
-    tasks = list(db.scalars(select(TimelineTask).where(TimelineTask.project_id == project.id)))
-    evaluation = project_service.latest_evaluation(db, project.id)
-    poster_score = None
-    if project_service.has_poster_draft(db, project.id):
-        poster_score = project_service.poster_critique(db, project).score
-    return readiness.compute(tasks, evaluation, poster_score)
+    return readiness.for_project(db, project)
 
 
 @router.get("/projects/{project_id}/this-week", response_model=WeeklyPlan)

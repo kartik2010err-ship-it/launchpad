@@ -164,6 +164,7 @@ built in, and the API is same-origin, so CORS needs no changes.
 | Task | How |
 |---|---|
 | Ship a change | Push a branch and open a PR. CI runs backend tests on SQLite and Postgres, the frontend build, and browser checks. Vercel posts a preview URL. Merge to deploy. |
+| Deployment fails in ~5 seconds with no build log | On the free Hobby plan, Vercel only builds commits whose **author** is the account owner; anyone else needs the paid Pro plan. Make sure commits are authored with your own GitHub email (`git config user.email`). The newest commit on a branch is the one that counts, so one commit by you on top unblocks it. |
 | Roll back | Vercel → Deployments → pick the last good one → **Promote to Production**. Instant, no rebuild. |
 | See errors | Vercel → project → **Logs**. Every request is logged with method, path, status, duration and a request id. Users see "Reference: <id>" on errors, so search the logs for it. |
 | Uptime monitoring | Optional. If you add a free monitor (UptimeRobot, Better Stack) on `https://<domain>/api/health`, check **at most once an hour**: every check wakes the database for ~5 minutes, and frequent checks alone can use a large share of Neon's free compute hours. It returns 503 when the database is unreachable or configuration is missing. |

@@ -132,3 +132,24 @@ def completion_percent(tasks) -> int:
         return 0
     done = sum(1 for t in tasks if t.status == TaskStatus.COMPLETE)
     return round(100 * done / len(tasks))
+
+
+def for_project(db, project) -> ReadinessOut:
+    """Readiness for a stored project: gathers the inputs ``compute`` needs.
+
+    The one place that knows where tasks, the latest evaluation and the poster
+    score come from, so the student's readiness page and an advisor's progress
+    panel cannot drift apart.
+    """
+
+    from sqlalchemy import select
+
+    from app.models.workspace import TimelineTask
+    from app.services import project_service
+
+    tasks = list(db.scalars(select(TimelineTask).where(TimelineTask.project_id == project.id)))
+    evaluation = project_service.latest_evaluation(db, project.id)
+    poster_score = None
+    if project_service.has_poster_draft(db, project.id):
+        poster_score = project_service.poster_critique(db, project).score
+    return compute(tasks, evaluation, poster_score)

@@ -1,0 +1,13 @@
+{
+  "name": "research-coach-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Browser checks against a running Research Coach (local or deployed).",
+  "scripts": {
+    "smoke": "node smoke.mjs",
+    "flows": "node flows.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.64.0"
+  }
+}

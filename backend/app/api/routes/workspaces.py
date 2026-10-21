@@ -20,6 +20,7 @@ from app.api.deps import (
     require_oversight,
     require_owner,
 )
+from app.core import rate_limit
 from app.db.session import get_db
 from app.models.enums import ActivityKind, CommentType, ProjectStatus, WorkspaceRole
 from app.models.project import Project, User
@@ -144,9 +145,12 @@ def join_with_code(
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
 ):
+    bucket = f"join:{user.id}"
+    rate_limit.check(db, bucket)
     try:
         workspace, membership = workspace_service.join_by_code(db, user, payload.join_code)
     except LookupError as exc:
+        rate_limit.record(db, bucket)
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
     except PermissionError as exc:
         raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc

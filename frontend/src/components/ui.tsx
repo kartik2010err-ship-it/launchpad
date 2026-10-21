@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import type { EvidenceBasis, NoveltyStatus, RequirementSource, TaskStatus } from "../api/types";
 
 /* ------------------------------------------------------------------ card -- */
@@ -85,6 +85,7 @@ export function Gauge({
 }) {
   const unassessable = basis === "not_yet_assessable";
   const [shown, setShown] = useState(animate ? 0 : value);
+  const labelId = useId();
 
   useEffect(() => {
     if (!animate) {
@@ -100,16 +101,24 @@ export function Gauge({
   return (
     <div className={`gauge${tone ? ` gauge--${tone}` : ""}`}>
       <div className="gauge__head">
-        <span className="gauge__label">{label}</span>
+        <span className="gauge__label" id={labelId}>
+          {label}
+        </span>
         <span className="gauge__value">{unassessable ? "not yet assessable" : `${value}${suffix}`}</span>
       </div>
+      {/* A meter must have a value; an unscored one is just a labelled
+          picture, and the "not yet assessable" text above says why. */}
       <div
         className="gauge__track"
-        role="meter"
-        aria-valuenow={unassessable ? undefined : value}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={typeof label === "string" ? label : undefined}
+        {...(unassessable
+          ? { role: "img", "aria-labelledby": labelId, "aria-description": "not yet assessable" }
+          : {
+              role: "meter",
+              "aria-valuenow": value,
+              "aria-valuemin": 0,
+              "aria-valuemax": 100,
+              "aria-labelledby": labelId,
+            })}
       >
         {!unassessable && <div className="gauge__fill" style={{ width: `${Math.max(0, Math.min(100, shown))}%` }} />}
         <div className="gauge__tick" style={{ left: "45%" }} />

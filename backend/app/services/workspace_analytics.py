@@ -26,7 +26,8 @@ from app.models.workspace import Evaluation, MentorComment, PosterDraft, Timelin
 from app.models.workspace_org import Workspace, WorkspaceMembership
 from app.services import project_status_service as status_service
 from app.services import team_service, workspace_service
-from app.services.readiness import AREA_LABELS, compute as compute_readiness
+from app.services.readiness import AREA_LABELS
+from app.services.readiness import for_project as compute_readiness
 
 # Progress areas surfaced in the compact per-student view.
 PROGRESS_AREAS = ["research_question", "methodology", "experimentation", "analysis", "poster"]

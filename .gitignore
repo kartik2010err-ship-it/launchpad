@@ -10,3 +10,4 @@ dist/
 tsconfig.tsbuildinfo
 .claude/worktrees/
 .DS_Store
+.vercel/

@@ -377,6 +377,10 @@ def import_records(
 
     report = ImportReport()
     for record in records:
+        # A savepoint per row: on Postgres a failed INSERT aborts the whole
+        # transaction, so without one a single bad row (a title longer than
+        # its column, say) would take every row before it down too.
+        savepoint = db.begin_nested()
         try:
             existing = db.scalars(
                 select(HistoricalProject).where(
@@ -390,10 +394,8 @@ def import_records(
                     source=record.source, source_project_id=record.source_project_id
                 )
                 db.add(row)
-                report.created += 1
             else:
                 row = existing
-                report.updated += 1
 
             for attribute in _WRITABLE:
                 value = getattr(record, attribute)
@@ -408,10 +410,20 @@ def import_records(
             db.flush()
             if retag:
                 apply_derived_tags(db, row)
+            savepoint.commit()
         except Exception as exc:  # noqa: BLE001 — one bad row must not lose the batch
+            savepoint.rollback()
             report.skipped += 1
-            report.errors.append(f"{record.source_project_id}: {exc}")
+            # The driver's message, not the exception's: the latter embeds the
+            # whole SQL statement and every bound value.
+            reason = str(getattr(exc, "orig", None) or exc).splitlines()[0][:200]
+            report.errors.append(f"{record.source_project_id}: {reason}")
             log.exception("historical import: could not store %s", record.source_project_id)
+            continue
+        if existing is None:
+            report.created += 1
+        else:
+            report.updated += 1
 
     db.commit()
     return report

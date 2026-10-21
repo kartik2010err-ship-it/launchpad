@@ -42,9 +42,10 @@ they waste your free compute hours and break the spirit of the free-tier terms.
 ### 1. Create the database (Neon)
 
 1. Sign up at <https://neon.tech> (GitHub login works; no card).
-2. Create a project, choosing **AWS US East (N. Virginia)**. It must be in the
-   same region as Vercel's default (`iad1`), or every query pays a
-   cross-country round trip.
+2. Create a project in **AWS US East 2 (Ohio)**. `vercel.json` pins the API
+   to Vercel's `cle1` (Cleveland) region next to it. If you ever move the
+   database to another region, change `regions` in `vercel.json` to the
+   nearest Vercel region, or every query pays a cross-country round trip.
 3. On the dashboard, open **Connect**, turn on **Connection pooling**, and copy
    the connection string. Its host ends in `-pooler`, for example
    `postgresql://user:pass@ep-xxx-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require`.
@@ -165,7 +166,7 @@ built in, and the API is same-origin, so CORS needs no changes.
 | Ship a change | Push a branch and open a PR. CI runs backend tests on SQLite and Postgres, the frontend build, and browser checks. Vercel posts a preview URL. Merge to deploy. |
 | Roll back | Vercel → Deployments → pick the last good one → **Promote to Production**. Instant, no rebuild. |
 | See errors | Vercel → project → **Logs**. Every request is logged with method, path, status, duration and a request id. Users see "Reference: <id>" on errors, so search the logs for it. |
-| Uptime monitoring | Point a free monitor (UptimeRobot, Better Stack) at `https://<domain>/api/health` every 15–30 minutes. It returns 503 when the database is unreachable or configuration is missing. Checking more often than every 5 minutes would keep Neon awake and use up compute hours. |
+| Uptime monitoring | Optional. If you add a free monitor (UptimeRobot, Better Stack) on `https://<domain>/api/health`, check **at most once an hour**: every check wakes the database for ~5 minutes, and frequent checks alone can use a large share of Neon's free compute hours. It returns 503 when the database is unreachable or configuration is missing. |
 | Check free-tier usage | Vercel → **Usage**; Neon → **Billing → Usage**. Both pause rather than bill when a limit is reached. |
 | Back up the database | Neon keeps a 6-hour restore window on Free. For anything longer, run `pg_dump "$NEON_DIRECT_URL" > backup-$(date +%F).sql` on a schedule you trust. |
 | Add a column | Add it to the SQLAlchemy model. On the next deploy, the first request adds the column. Renames, type changes and drops are **not** automatic; write those as SQL and run them against a backup first. |

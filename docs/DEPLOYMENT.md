@@ -159,6 +159,37 @@ built in, and the API is same-origin, so CORS needs no changes.
 
 ---
 
+## Password-reset emails (Resend, free)
+
+"Forgot password?" emails a one-time link that expires in an hour. Emails are
+sent through [Resend](https://resend.com). The free plan allows 3,000
+emails a month and 100 a day, and needs no card. Until `RESEND_API_KEY` is set,
+the form still answers normally but sends nothing.
+
+1. Sign up at <https://resend.com> (GitHub login works).
+2. **Domains → Add Domain** → `researchcoach.app`, region **North Virginia
+   (us-east-1)**.
+3. Resend lists 3–4 DNS records (an `MX` and a `TXT` for a `send` subdomain,
+   a `TXT` named `resend._domainkey`, and optionally `_dmarc`). Add each one in
+   Vercel → **Domains → researchcoach.app → DNS Records → Add**. In the
+   **Name** box, enter only the part before `researchcoach.app` (for example
+   `send` or `resend._domainkey`), and copy the type, value and priority
+   exactly.
+4. Back in Resend, click **Verify DNS Records**. It usually turns green within
+   minutes.
+5. **API Keys → Create API Key**, with permission **Sending access** and domain
+   `researchcoach.app`. Copy the key; it is shown once.
+6. Vercel → Settings → Environments → Production → add `RESEND_API_KEY`
+   (type **Secret**) with that key, then redeploy.
+
+Emails come from `no-reply@researchcoach.app` (override with `EMAIL_FROM`).
+Links point at `VITE_SITE_URL` (override with `SITE_URL`), never at whatever
+host a request claims to come from. To test, use **Forgot password?** on the
+live site with your own account. Delivery problems appear in Vercel's logs and
+in Resend's **Emails** page.
+
+---
+
 ## Everyday maintenance
 
 | Task | How |

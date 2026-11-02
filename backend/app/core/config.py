@@ -1,6 +1,7 @@
 import os
 from functools import lru_cache
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEV_SECRET = "dev-secret-not-for-production"
@@ -37,6 +38,17 @@ class Settings(BaseSettings):
     # Only needed when the frontend is served from a different origin than the
     # API. On Vercel both share one origin under /api and CORS never applies.
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
+    # Password-reset emails, sent through Resend (resend.com). With no key the
+    # reset flow still answers normally but sends nothing, so the feature is
+    # dormant until someone configures it.
+    resend_api_key: str = ""
+    email_from: str = "Research Coach <no-reply@researchcoach.app>"
+    # The public address links in emails point at. Never taken from the
+    # request's Host header, which a caller controls. Falls back to the
+    # frontend's VITE_SITE_URL so one setting covers both.
+    site_url: str = Field(default="", validation_alias=AliasChoices("SITE_URL", "VITE_SITE_URL"))
+    password_reset_ttl_minutes: int = 60
 
     # Attempts allowed per client per window on sign-in, sign-up and join codes.
     auth_rate_limit: int = 10

@@ -160,7 +160,8 @@ Being straight about the edges:
   next step if the schema starts changing shape.
 - **Auth is minimal.** PBKDF2 hashing and HMAC-signed tokens from the standard
   library, with database-backed rate limits on sign-in, sign-up and join
-  codes. No refresh tokens, no password reset, no email verification.
+  codes, and an emailed one-time password-reset link (via Resend). No refresh
+  tokens and no email verification.
 - **Mentor comments are not threaded** and there are no notifications.
 - **Nothing is exportable.** No PDF of the research plan, no poster export.
 - The AI project manager (re-planning after a delay) recomputes downstream task

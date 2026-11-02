@@ -41,7 +41,8 @@ SHARED_ADDRESS_FACTOR = 5
 
 
 def _limit_for(bucket: str, base: int) -> int:
-    return base * SHARED_ADDRESS_FACTOR if bucket.startswith(("ip:", "login-ip:", "register:")) else base
+    shared = ("ip:", "login-ip:", "register:", "forgot-ip:", "reset-ip:")
+    return base * SHARED_ADDRESS_FACTOR if bucket.startswith(shared) else base
 
 
 def check(db: Session, *buckets: str) -> None:

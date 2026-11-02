@@ -2736,3 +2736,14 @@ textarea:focus {
     animation: none;
   }
 }
+
+/* A button that reads as an inline link, for actions inside a sentence. */
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}

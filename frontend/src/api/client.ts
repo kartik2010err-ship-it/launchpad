@@ -128,6 +128,9 @@ export const api = {
   login: (email: string, password: string) => post<TokenResponse>("/auth/login", { email, password }),
   register: (payload: Record<string, unknown>) => post<TokenResponse>("/auth/register", payload),
   me: () => get<T.User>("/auth/me"),
+  forgotPassword: (email: string) => post<{ detail: string }>("/auth/forgot-password", { email }),
+  resetPassword: (token: string, password: string) =>
+    post<TokenResponse>("/auth/reset-password", { token, password }),
 
   listProjects: (workspaceId?: number) =>
     get<T.Project[]>(`/projects${workspaceId ? `?workspace_id=${workspaceId}` : ""}`),

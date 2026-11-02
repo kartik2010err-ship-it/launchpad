@@ -10,7 +10,9 @@ DEFAULT_SQLITE = "sqlite:///./research_coach.db"
 class Settings(BaseSettings):
     """Runtime configuration. Every value is overridable by environment variable."""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Values are pasted into hosting dashboards by hand, and a stray tab or
+    # newline is invisible there. Strip them, so "\theuristic" means "heuristic".
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", str_strip_whitespace=True)
 
     app_name: str = "Research Coach"
     # "development" or "production". Left empty, it is inferred from the host:

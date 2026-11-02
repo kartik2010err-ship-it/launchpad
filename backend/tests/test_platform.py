@@ -58,6 +58,16 @@ def test_hosted_postgres_urls_use_the_installed_driver(given):
     assert Settings(database_url=given).sqlalchemy_url == "postgresql+psycopg://u:p@host/db?sslmode=require"
 
 
+def test_pasted_settings_ignore_stray_whitespace(monkeypatch):
+    """A tab pasted into a hosting dashboard must not change a setting's meaning."""
+
+    monkeypatch.setenv("AI_PROVIDER", "\theuristic\n")
+    monkeypatch.setenv("SECRET_KEY", "  " + "k" * 40 + "\n")
+    settings = Settings(_env_file=None)
+    assert settings.ai_provider == "heuristic"
+    assert settings.secret_key == "k" * 40
+
+
 def test_default_sqlite_moves_to_tmp_on_serverless(monkeypatch):
     monkeypatch.setenv("VERCEL", "1")
     monkeypatch.delenv("DATABASE_URL", raising=False)

@@ -5,6 +5,8 @@ import { useAuth } from "./state/auth";
 import { WorkspaceProvider } from "./state/workspace";
 import Landing from "./pages/Landing";
 import SignIn, { safeNext } from "./pages/SignIn";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 // Pages load on demand: a visitor on the landing page should not download the
 // timeline planner. Landing and sign-in stay in the main bundle for first paint.
 const Projects = lazy(() => import("./pages/Projects"));
@@ -90,6 +92,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="*" element={<PublicApp />} />
       </Routes>
     );
@@ -103,6 +107,8 @@ export default function App() {
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<Home />} />
         <Route path="/sign-in" element={<AfterSignIn />} />
+        {/* An emailed reset link still works if this browser is signed in. */}
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/projects/new" element={<NewProject />} />
 

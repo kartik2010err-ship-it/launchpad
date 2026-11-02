@@ -9,7 +9,7 @@ from app.core.security import create_token, hash_password, verify_password
 from app.db.session import get_db
 from app.models.enums import Role
 from app.models.project import User
-from app.services import workspace_service
+from app.services import password_reset, workspace_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -98,3 +98,55 @@ def login(payload: LoginIn, request: Request, db: Session = Depends(get_db)) -> 
 @router.get("/me")
 def me(user: User = Depends(current_user)) -> dict:
     return {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "school": user.school}
+
+
+# --------------------------------------------------------------------------- #
+# Forgot password
+# --------------------------------------------------------------------------- #
+
+RESET_SENT = (
+    "If an account uses that email, we've sent a link to reset the password. "
+    "It expires in an hour. Check your spam folder if it doesn't arrive."
+)
+
+
+class ForgotPasswordIn(BaseModel):
+    email: EmailStr
+
+    normalize_email = field_validator("email")(_normalize_email)
+
+
+class ResetPasswordIn(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    password: str = Field(min_length=8, max_length=256)
+
+
+@router.post("/forgot-password")
+def forgot_password(payload: ForgotPasswordIn, request: Request, db: Session = Depends(get_db)) -> dict:
+    """Email a reset link. Answers identically whether or not the account
+    exists, so the form cannot be used to find out who has signed up."""
+
+    buckets = (f"forgot-ip:{rate_limit.client_ip(request)}", f"forgot-email:{payload.email}")
+    rate_limit.check(db, *buckets)
+    rate_limit.record(db, *buckets)
+    user = _user_by_email(db, payload.email)
+    if user is not None:
+        password_reset.request_reset(db, user)
+    return {"detail": RESET_SENT}
+
+
+@router.post("/reset-password", response_model=TokenOut)
+def reset_password(payload: ResetPasswordIn, request: Request, db: Session = Depends(get_db)) -> TokenOut:
+    """Set a new password from an emailed link, then sign in with it."""
+
+    bucket = f"reset-ip:{rate_limit.client_ip(request)}"
+    rate_limit.check(db, bucket)
+    try:
+        user = password_reset.complete_reset(db, payload.token, payload.password)
+    except password_reset.InvalidResetToken:
+        rate_limit.record(db, bucket)
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "This reset link is invalid, already used, or expired. Request a new one.",
+        ) from None
+    return TokenOut(access_token=create_token(user.id), user_id=user.id, name=user.name, role=Role(user.role))

@@ -41,6 +41,11 @@ class User(Base):
     school: Mapped[str | None] = mapped_column(String(160), default=None)
     grade_level: Mapped[int | None] = mapped_column(Integer, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    # Set when the password changes. Sign-in tokens issued before it are
+    # refused, so a reset signs every other device out.
+    password_changed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
 
     projects: Mapped[list[Project]] = relationship(
         back_populates="owner", foreign_keys="Project.owner_id"

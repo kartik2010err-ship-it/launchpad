@@ -130,6 +130,14 @@ export default function SignIn() {
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
           {mode === "up" && <span className="faint">At least 8 characters.</span>}
+          {mode === "in" && (
+            <Link
+              to={`/forgot-password${form.email ? `?email=${encodeURIComponent(form.email)}` : ""}`}
+              className="faint"
+            >
+              Forgot password?
+            </Link>
+          )}
         </label>
 
         {mode === "up" && (

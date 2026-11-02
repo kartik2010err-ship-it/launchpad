@@ -10,6 +10,8 @@ interface AuthValue {
   retryBoot: () => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (payload: Record<string, unknown>) => Promise<void>;
+  /** Sign in with a token the API already issued (e.g. after a password reset). */
+  adoptToken: (token: string) => Promise<void>;
   signOut: () => void;
 }
 
@@ -65,6 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp: async (payload) => {
         const result = await api.register(payload);
         setToken(result.access_token);
+        setUser(await api.me());
+      },
+      adoptToken: async (token) => {
+        setToken(token);
         setUser(await api.me());
       },
       signOut: () => {

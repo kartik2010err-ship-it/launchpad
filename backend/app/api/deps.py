@@ -8,10 +8,12 @@ without touching those handlers.
 
 from __future__ import annotations
 
+from datetime import timezone
+
 from fastapi import Depends, Header, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
-from app.core.security import read_token
+from app.core.security import read_token_claims
 from app.db.session import get_db
 from app.models.enums import WorkspaceRole
 from app.models.project import Project, User
@@ -26,12 +28,20 @@ def current_user(
 ) -> User:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in to continue.")
-    user_id = read_token(authorization.split(" ", 1)[1])
-    if user_id is None:
+    claims = read_token_claims(authorization.split(" ", 1)[1])
+    if claims is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Your session expired. Sign in again.")
-    user = db.get(User, user_id)
+    user = db.get(User, claims["sub"])
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Account not found.")
+    if user.password_changed_at is not None:
+        changed = user.password_changed_at
+        if changed.tzinfo is None:  # SQLite hands timestamps back without a zone
+            changed = changed.replace(tzinfo=timezone.utc)
+        if int(claims.get("iat", 0)) < int(changed.timestamp()):
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED, "Your password was changed. Sign in again."
+            )
     return user
 
 

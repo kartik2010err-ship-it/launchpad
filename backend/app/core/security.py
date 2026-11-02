@@ -44,13 +44,19 @@ def _unb64(value: str) -> bytes:
 
 def create_token(user_id: int) -> str:
     settings = get_settings()
-    payload = {"sub": user_id, "exp": int(time.time()) + settings.access_token_ttl_minutes * 60}
+    now = int(time.time())
+    payload = {"sub": user_id, "iat": now, "exp": now + settings.access_token_ttl_minutes * 60}
     body = _b64(json.dumps(payload, separators=(",", ":")).encode())
     signature = hmac.new(settings.secret_key.encode(), body.encode(), hashlib.sha256).digest()
     return f"{body}.{_b64(signature)}"
 
 
-def read_token(token: str) -> int | None:
+def read_token_claims(token: str) -> dict | None:
+    """The verified, unexpired payload of a sign-in token, or None.
+
+    Tokens issued before ``iat`` existed have none; callers treat that as 0.
+    """
+
     settings = get_settings()
     try:
         body, signature = token.split(".")
@@ -60,6 +66,8 @@ def read_token(token: str) -> int | None:
         payload = json.loads(_unb64(body))
     except (ValueError, TypeError, json.JSONDecodeError):
         return None
-    if payload.get("exp", 0) < time.time():
+    if not isinstance(payload, dict) or payload.get("exp", 0) < time.time():
         return None
-    return payload.get("sub")
+    if payload.get("sub") is None:
+        return None
+    return payload
